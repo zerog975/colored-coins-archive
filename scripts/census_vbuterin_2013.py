@@ -50,7 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Earliest block time (default: root commit, 2013-09-27T22:09:50Z)")
     parser.add_argument("--end-time", type=int, default=1420070400,
                         help="Latest block time to assess (default: 2015-01-01T00:00:00Z)")
-    parser.add_argument("--max-pages", type=int, default=4000,
+    parser.add_argument("--max-pages", type=int, default=20000,
                         help="Address pages to read (25 transactions each) before stopping")
     parser.add_argument("--max-transactions", type=int, default=5000,
                         help="Spending transactions to follow per genesis before stopping")
@@ -59,8 +59,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--marker-address",
                         help="Marker address to page (default: version-0 form, or version-111 when --network contains 'test')")
     parser.add_argument("--no-verify", action="store_true", help="Skip find_genesis cross-checks")
-    parser.add_argument("--request-delay", type=float, default=0.5,
-                        help="Minimum seconds between HTTP requests (default 0.5); 429s are retried with backoff")
+    parser.add_argument("--request-delay", type=float, default=1.0,
+                        help="Minimum seconds between HTTP requests (default 1.0); 429s are retried with backoff")
+    parser.add_argument("--start-after", help="Resume address paging after this TXID (the resume_after of a previous run)")
     return parser
 
 
@@ -73,16 +74,23 @@ def discover_by_address(source: EsploraSource, args) -> tuple[list[CandidateAsse
              "marker_transactions_in_window": 0, "reached_start_time": False,
              "history_exhausted": False, "page_limit_hit": False}
     found: list[CandidateAssessment] = []
-    last_seen = None
+    last_seen = getattr(args, "start_after", None) or None
+    stats["started_after"] = last_seen
     while True:
         if stats["pages_read"] >= args.max_pages:
             stats["page_limit_hit"] = True
             break
-        page = source.address_chain_txs_page(args.marker_address, last_seen)
+        try:
+            page = source.address_chain_txs_page(args.marker_address, last_seen)
+        except EsploraError as exc:
+            if stats["pages_read"] == 0 and not last_seen:
+                raise
+            stats["error"] = str(exc)  # keep what was found; resume from last_seen
+            break
         stats["pages_read"] += 1
         if stats["pages_read"] % 50 == 0:
             oldest = (page[-1].get("status") or {}).get("block_time") if page else None
-            print(f"pages={stats['pages_read']} seen={stats['transactions_seen']} oldest_block_time={oldest}",
+            print(f"pages={stats['pages_read']} seen={stats['transactions_seen']} oldest_block_time={oldest} last_seen={last_seen}",
                   file=sys.stderr, flush=True)
         if not page:
             if stats["pages_read"] == 1:
@@ -118,6 +126,7 @@ def discover_by_address(source: EsploraSource, args) -> tuple[list[CandidateAsse
             stats["reached_start_time"] = True
             break
         last_seen = str(page[-1]["txid"])
+    stats["resume_after"] = None if stats["reached_start_time"] or stats["history_exhausted"] else last_seen
     found.sort(key=lambda a: (a.block_height or 0, a.txid))
     return found, stats
 
@@ -228,7 +237,8 @@ def main() -> int:
         return 2
 
     consistent = [c for c in payload["candidates"] if c["matching_rulesets"]]
-    incomplete = stats.get("page_limit_hit") or any(l["truncated"] for l in payload["lineages"])
+    incomplete = (stats.get("page_limit_hit") or stats.get("error") or stats.get("started_after")
+                  or any(l["truncated"] for l in payload["lineages"]))
     payload["summary"] = {
         "marker_transactions_assessed": len(payload["candidates"]),
         "consistent_geneses": len(consistent),

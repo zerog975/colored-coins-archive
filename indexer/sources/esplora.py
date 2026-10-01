@@ -35,7 +35,7 @@ class EsploraSource(TransactionSource):
         resolve_tx_index: bool = True,
         fetch_json: JsonFetcher | None = None,
         request_delay: float = 0.0,
-        max_retries: int = 6,
+        max_retries: int = 10,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -73,7 +73,7 @@ class EsploraSource(TransactionSource):
                     backoff = float(retry_after) if retry_after else 2.0 ** (attempt + 1)
                 except ValueError:
                     backoff = 2.0 ** (attempt + 1)
-                self._sleep(min(backoff, 300.0))
+                self._sleep(min(backoff, 600.0))
         raise AssertionError("unreachable")
 
     def _http_get_json_once(self, url: str) -> object:

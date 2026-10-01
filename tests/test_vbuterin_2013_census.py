@@ -221,6 +221,35 @@ class DiscoveryTests(unittest.TestCase):
         _found, stats = self.script.discover_by_address(source, args)
         self.assertTrue(stats["page_limit_hit"])
 
+    def test_failure_mid_paging_keeps_results_and_resume_point(self):
+        from indexer.sources.esplora import EsploraError
+
+        base = "https://example.invalid"
+        addr = f"{base}/api/address/{vb.MARKER_ADDRESS}/txs/chain"
+        genesis = raw_tx(G, GENESIS_OUTPUTS, OCT_2013, 260000, input_value=1000000)
+
+        def fetcher(url):
+            if url == addr:
+                return [genesis]
+            raise EsploraError("HTTP 429 from " + url)
+
+        source = EsploraSource(base, network_label="fixture", fetch_json=fetcher)
+        args = SimpleNamespace(marker_address=vb.MARKER_ADDRESS, start_time=ROOT_COMMIT_TIME,
+                               end_time=1420070400, max_pages=10, start_after=None)
+        found, stats = self.script.discover_by_address(source, args)
+        self.assertEqual([a.txid for a in found], [G])
+        self.assertIn("429", stats["error"])
+        self.assertEqual(stats["resume_after"], G)
+
+        resumed = SimpleNamespace(**{**vars(args), "start_after": G})
+        source = EsploraSource(base, network_label="fixture",
+                               fetch_json=FakeFetcher({f"{addr}/{G}": [raw_tx("2" * 64, [(1, vb.MARKER_SCRIPT_HEX)],
+                                                                             ROOT_COMMIT_TIME - 10, 250000)]}))
+        found, stats = self.script.discover_by_address(source, resumed)
+        self.assertEqual(found, [])
+        self.assertTrue(stats["reached_start_time"])
+        self.assertIsNone(stats["resume_after"])
+
     def test_empty_first_page_is_an_error_not_a_result(self):
         from indexer.sources.esplora import EsploraError
 

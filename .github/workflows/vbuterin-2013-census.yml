@@ -12,6 +12,13 @@ on:
       - "indexer/protocols/vbuterin_2013.py"
       - "indexer/sources/esplora.py"
   workflow_dispatch:
+    inputs:
+      network:
+        description: "Which network to run (mainnet, testnet3 or both)"
+        default: both
+      start_after:
+        description: "Resume address paging after this TXID (resume_after from a previous run of the same network)"
+        default: ""
 
 permissions:
   contents: read
@@ -19,7 +26,7 @@ permissions:
 jobs:
   census:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 340
     strategy:
       fail-fast: false
       matrix:
@@ -44,6 +51,9 @@ jobs:
           python-version: "3.12"
 
       - name: Find and trace marker-address geneses
+        if: >-
+          github.event_name != 'workflow_dispatch' || inputs.network == 'both' ||
+          contains(matrix.network, inputs.network)
         shell: bash
         run: |
           mkdir -p results
@@ -51,6 +61,7 @@ jobs:
           python scripts/census_vbuterin_2013.py \
             --base-url "${{ matrix.base_url }}" \
             --network "${{ matrix.network }}" \
+            ${{ inputs.start_after && format('--start-after {0}', inputs.start_after) || '' }} \
             > "results/${{ matrix.label }}.json"
           code=$?
           set -e
@@ -59,9 +70,13 @@ jobs:
           import json, sys
           data = json.load(open(sys.argv[1]))
           print(json.dumps({k: data.get(k) for k in ("status", "error", "discovery", "summary")}, indent=2))
+          print("consistent candidates:", [c["txid"] for c in data.get("candidates", []) if c["matching_rulesets"]])
           EOF
 
       - name: Upload census evidence
+        if: >-
+          github.event_name != 'workflow_dispatch' || inputs.network == 'both' ||
+          contains(matrix.network, inputs.network)
         uses: actions/upload-artifact@v4
         with:
           name: vbuterin-2013-census-${{ matrix.label }}
