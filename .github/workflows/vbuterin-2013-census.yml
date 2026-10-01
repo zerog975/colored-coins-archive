@@ -1,0 +1,69 @@
+name: vbuterin 2013 genesis census
+
+on:
+  push:
+    branches:
+      - main
+      - claude/sharp-mccarthy-3evzom
+    paths:
+      - ".github/workflows/vbuterin-2013-census.yml"
+      - "scripts/census_vbuterin_2013.py"
+      - "indexer/vbuterin_2013_census.py"
+      - "indexer/protocols/vbuterin_2013.py"
+      - "indexer/sources/esplora.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: mempool-mainnet
+            base_url: https://mempool.space
+            network: bitcoin-mainnet
+          - label: blockstream-mainnet
+            base_url: https://blockstream.info
+            network: bitcoin-mainnet
+          - label: mempool-testnet3
+            base_url: https://mempool.space/testnet
+            network: bitcoin-testnet3
+          - label: blockstream-testnet3
+            base_url: https://blockstream.info/testnet
+            network: bitcoin-testnet3
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Find and trace marker-address geneses
+        shell: bash
+        run: |
+          mkdir -p results
+          set +e
+          python scripts/census_vbuterin_2013.py \
+            --base-url "${{ matrix.base_url }}" \
+            --network "${{ matrix.network }}" \
+            > "results/${{ matrix.label }}.json"
+          code=$?
+          set -e
+          echo "census_exit_code=$code"
+          python - "results/${{ matrix.label }}.json" <<'EOF'
+          import json, sys
+          data = json.load(open(sys.argv[1]))
+          print(json.dumps({k: data.get(k) for k in ("status", "error", "discovery", "summary")}, indent=2))
+          EOF
+
+      - name: Upload census evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: vbuterin-2013-census-${{ matrix.label }}
+          path: results/${{ matrix.label }}.json
+          if-no-files-found: error

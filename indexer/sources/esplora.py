@@ -152,6 +152,23 @@ class EsploraSource(TransactionSource):
         self._tx_cache[txid] = record
         return record
 
+    def address_chain_txs_page(self, address: str, last_seen_txid: str | None = None) -> list[dict]:
+        """One page (newest first) of confirmed transactions involving ``address``.
+
+        Esplora returns up to 25 transactions per page as raw JSON, including
+        each input's ``prevout``. Pass the last TXID of a page to read the next.
+        """
+
+        path = f"/api/address/{address}/txs/chain"
+        if last_seen_txid:
+            path += f"/{last_seen_txid}"
+        data = self._read(path)
+        if data is None:
+            return []
+        if not isinstance(data, list) or not all(isinstance(x, dict) for x in data):
+            raise EsploraError("unexpected address transaction page")
+        return data
+
     def get_spender(self, txid: str, vout: int) -> str | None:
         key = (txid, vout)
         if key in self._outspend_cache:

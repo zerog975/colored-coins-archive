@@ -123,10 +123,19 @@ Fixtures and tests:
 
 This kernel must not be applied to killerstorm's 2012 `cbtc` whole-transaction coloring, order-based weak coloring / ArmoryX, EPOBC, or Open Assets.
 
+## Census tooling
+
+`indexer/vbuterin_2013_census.py` and `scripts/census_vbuterin_2013.py` find and trace issuances (read-only):
+
+1. **Discovery.** Page through the confirmed transactions of `1111111111111111111114oLvT2` back to the root commit date (Esplora), or read candidate TXIDs from a file. Marker outputs cannot be spent, so Bitcoin Core `scantxoutset start '["raw(76a914000000000000000000000000000000000000000088ac)"]'` lists every one of them; its JSON output is accepted directly.
+2. **Assessment.** `assess_genesis_candidate` compares each candidate with both genesis layouts: 10000-sat outputs, change on output 0 (2013-09-27) or on a final change output (2013-10-01), a fee that is a multiple of 10000, decodable metadata, and confirmation after the root commit. The address is a common burn address, so most candidates are expected to fail.
+3. **Forward tracing.** `Vbuterin2013Census.trace` follows colored satoshi ranges through spending transactions (the inverse of `trace_to_parent`: 0-based, half-open ranges, inputs and outputs laid end to end) to unspent holders or fees, and cross-checks every holder backwards with `find_genesis`. Transaction metadata on transfers is not interpreted.
+
+Caps on pages and followed transactions are reported in the output (`status: incomplete`), never applied silently. The workflow `.github/workflows/vbuterin-2013-census.yml` runs the census on mainnet and testnet3 against two independent Esplora services.
+
 ## Next steps
 
-1. Search Bitcoin mainnet (and testnet3) for outputs paying `76a914000000000000000000000000000000000000000088ac` between 2013-09-27 and roughly the end of 2013, using a read-only source.
-2. Match candidates against `plan_genesis_outputs` for each ruleset (10000-sat outputs; change on output 0 or on the last output, possibly below 10000 under node-sx `a7cc669`), check the fee against `historical_fee`, and decode their metadata.
-3. Record verified candidates under `historical/candidates/` and run a bounded lineage census with `find_genesis`.
-4. Build a Node.js reproduction environment (node-sx at the assumed revisions, a 2013 `sx`) to confirm the as-executed behavior end to end.
-5. Add an independent archival reference (e.g. Software Heritage) for the bundle.
+1. Run the census workflow and compare the two services' results; record verified candidates under `historical/candidates/` and freeze the census under `historical/census/`.
+2. If address paging is refused or too slow for the burn address, run `scantxoutset` on a Bitcoin Core node and pass the result with `--candidates-file`.
+3. Build a Node.js reproduction environment (node-sx at the assumed revisions, a 2013 `sx`) to confirm the as-executed behavior end to end.
+4. Add an independent archival reference (e.g. Software Heritage) for the bundle.
