@@ -1,4 +1,3 @@
-import hashlib
 import importlib.util
 import unittest
 from pathlib import Path
@@ -20,7 +19,6 @@ from indexer.vbuterin_2013_census import (
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "census_vbuterin_2013.py"
 OCT_2013 = PROTOCOL_FIX_COMMIT_TIME + 86400
-SCRIPTHASH = hashlib.sha256(bytes.fromhex(vb.MARKER_SCRIPT_HEX)).digest()[::-1].hex()
 
 
 def p2pkh(byte: int) -> str:
@@ -198,13 +196,13 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_address_paging_stops_at_root_commit_date(self):
         base = "https://example.invalid"
-        addr = f"{base}/api/scripthash/{SCRIPTHASH}/txs/chain"
+        addr = f"{base}/api/address/{vb.MARKER_ADDRESS}/txs/chain"
         newer = raw_tx("1" * 64, [(600, vb.MARKER_SCRIPT_HEX)], 1600000000, 600000)
         genesis = raw_tx(G, GENESIS_OUTPUTS, OCT_2013, 260000, input_value=1000000)
         older = raw_tx("2" * 64, [(1, vb.MARKER_SCRIPT_HEX)], ROOT_COMMIT_TIME - 10, 250000)
         fetcher = FakeFetcher({addr: [newer], f"{addr}/{'1' * 64}": [genesis, older]})
         source = EsploraSource(base, network_label="fixture", fetch_json=fetcher)
-        args = SimpleNamespace(start_time=ROOT_COMMIT_TIME, end_time=1420070400, max_pages=10)
+        args = SimpleNamespace(marker_address=vb.MARKER_ADDRESS, start_time=ROOT_COMMIT_TIME, end_time=1420070400, max_pages=10)
 
         found, stats = self.script.discover_by_address(source, args)
 
@@ -216,12 +214,21 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_page_limit_is_reported(self):
         base = "https://example.invalid"
-        addr = f"{base}/api/scripthash/{SCRIPTHASH}/txs/chain"
+        addr = f"{base}/api/address/{vb.MARKER_ADDRESS}/txs/chain"
         newer = raw_tx("1" * 64, [(600, vb.MARKER_SCRIPT_HEX)], 1600000000, 600000)
         source = EsploraSource(base, network_label="fixture", fetch_json=FakeFetcher({addr: [newer]}))
-        args = SimpleNamespace(start_time=ROOT_COMMIT_TIME, end_time=1420070400, max_pages=1)
+        args = SimpleNamespace(marker_address=vb.MARKER_ADDRESS, start_time=ROOT_COMMIT_TIME, end_time=1420070400, max_pages=1)
         _found, stats = self.script.discover_by_address(source, args)
         self.assertTrue(stats["page_limit_hit"])
+
+    def test_empty_first_page_is_an_error_not_a_result(self):
+        from indexer.sources.esplora import EsploraError
+
+        source = EsploraSource("https://example.invalid", network_label="fixture", fetch_json=FakeFetcher({}))
+        args = SimpleNamespace(marker_address=vb.MARKER_ADDRESS, start_time=ROOT_COMMIT_TIME,
+                               end_time=1420070400, max_pages=10)
+        with self.assertRaises(EsploraError):
+            self.script.discover_by_address(source, args)
 
     def test_scantxoutset_file_is_accepted(self):
         import json

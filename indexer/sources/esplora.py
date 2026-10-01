@@ -7,7 +7,6 @@ is no transaction-broadcast method.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import time
 from typing import Callable
@@ -183,17 +182,14 @@ class EsploraSource(TransactionSource):
         self._tx_cache[txid] = record
         return record
 
-    def script_chain_txs_page(self, script_pubkey_hex: str, last_seen_txid: str | None = None) -> list[dict]:
-        """One page (newest first) of confirmed transactions involving a script.
+    def address_chain_txs_page(self, address: str, last_seen_txid: str | None = None) -> list[dict]:
+        """One page (newest first) of confirmed transactions involving ``address``.
 
-        Uses the Esplora scripthash index (SHA-256 of the script, byte-reversed),
-        which works on every network, unlike address strings. Esplora returns
-        up to 25 transactions per page as raw JSON, including each input's
-        ``prevout``. Pass the last TXID of a page to read the next.
+        Esplora returns up to 25 transactions per page as raw JSON, including
+        each input's ``prevout``. Pass the last TXID of a page to read the next.
         """
 
-        scripthash = hashlib.sha256(bytes.fromhex(script_pubkey_hex)).digest()[::-1].hex()
-        path = f"/api/scripthash/{scripthash}/txs/chain"
+        path = f"/api/address/{address}/txs/chain"
         if last_seen_txid:
             path += f"/{last_seen_txid}"
         data = self._read(path)

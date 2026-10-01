@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Find and trace every coin issued with the 2013 vbuterin/coloredcoins tool.
 
-1. Discovery: page through the confirmed transactions of the marker script
-   (address 1111111111111111111114oLvT2 on mainnet; queried by scripthash so
-   it also works on testnet), newest first, back to the root commit date,
+1. Discovery: page through the confirmed transactions of the marker address
+   (1111111111111111111114oLvT2 on mainnet; the same all-zero hash160 is
+   mfWxJ45yp2SFn7UciZyNpvDKrzbhyfKrY8 on testnet), newest first, back to the
+   root commit date,
    or read candidate TXIDs from a file (for example the output of Bitcoin
    Core ``scantxoutset start '["raw(76a914<40 zeros>88ac)"]'``).
 2. Assessment: compare each candidate with the historical genesis layouts.
@@ -55,6 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Spending transactions to follow per genesis before stopping")
     parser.add_argument("--candidates-file", type=Path,
                         help="JSON list of TXIDs, or scantxoutset output, instead of address paging")
+    parser.add_argument("--marker-address",
+                        help="Marker address to page (default: version-0 form, or version-111 when --network contains 'test')")
     parser.add_argument("--no-verify", action="store_true", help="Skip find_genesis cross-checks")
     parser.add_argument("--request-delay", type=float, default=0.5,
                         help="Minimum seconds between HTTP requests (default 0.5); 429s are retried with backoff")
@@ -67,21 +70,26 @@ def _marker_paying(vout_data: list[dict]) -> bool:
 
 def discover_by_address(source: EsploraSource, args) -> tuple[list[CandidateAssessment], dict]:
     stats = {"method": "address-paging", "pages_read": 0, "transactions_seen": 0,
-             "marker_transactions_in_window": 0, "reached_start_time": False, "page_limit_hit": False}
+             "marker_transactions_in_window": 0, "reached_start_time": False,
+             "history_exhausted": False, "page_limit_hit": False}
     found: list[CandidateAssessment] = []
     last_seen = None
     while True:
         if stats["pages_read"] >= args.max_pages:
             stats["page_limit_hit"] = True
             break
-        page = source.script_chain_txs_page(vb.MARKER_SCRIPT_HEX, last_seen)
+        page = source.address_chain_txs_page(args.marker_address, last_seen)
         stats["pages_read"] += 1
         if stats["pages_read"] % 50 == 0:
             oldest = (page[-1].get("status") or {}).get("block_time") if page else None
             print(f"pages={stats['pages_read']} seen={stats['transactions_seen']} oldest_block_time={oldest}",
                   file=sys.stderr, flush=True)
         if not page:
-            stats["reached_start_time"] = True  # address history exhausted
+            if stats["pages_read"] == 1:
+                # The marker address has a long history on mainnet; an empty
+                # first page means the query failed, not that nothing exists.
+                raise EsploraError(f"explorer returned no transactions for {args.marker_address}; unverified, not evidence of absence")
+            stats["history_exhausted"] = True
             break
         for raw in page:
             stats["transactions_seen"] += 1
@@ -194,9 +202,12 @@ def lineage_json(r: LineageResult) -> dict:
 
 def main() -> int:
     args = build_parser().parse_args()
+    if not args.marker_address:
+        version = 0x6F if "test" in args.network.lower() else 0x00
+        args.marker_address = vb.base58check_encode(vb.MARKER_HASH160, version)
     source = EsploraSource(args.base_url, network_label=args.network, request_delay=args.request_delay)
     payload: dict = {"network": args.network, "base_url": args.base_url,
-                     "marker_address": vb.MARKER_ADDRESS,
+                     "marker_address": args.marker_address,
                      "window": {"start_time": args.start_time, "end_time": args.end_time}}
     try:
         if args.candidates_file:
