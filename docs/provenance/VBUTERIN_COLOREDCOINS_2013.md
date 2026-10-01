@@ -20,6 +20,8 @@ This record documents the surviving public GitHub repository `vbuterin/coloredco
 
 The root commit has no parent. The inspected branch consists of exactly ten commits from the root through the tip listed below.
 
+A second surviving ref, `master`, points to `4579b8e0293410ddbee002003f854fc9c77efcbf` (commit 8 below) and is an ancestor of the `coloredcoins` tip. It was identified during the 2026-09-30 snapshot and is preserved in the archived bundle.
+
 ## Complete surviving commit lineage
 
 Chronological order, oldest first:
@@ -65,8 +67,8 @@ The historical license file must be preserved verbatim with any archived source 
 These observations are descriptive and must not be confused with a final protocol specification:
 
 1. `package.json` at the inspected tip describes the package as `coloredcoins`, version `0.0.8`, with description `Basic colored coins implementation` and author `vbuterin`.
-2. The October 1 commit is explicitly titled `Bugfixes and one protocol fix`; its diff changes genesis construction so that a mandatory change output is appended and transaction construction treats the final output as change. This is historically significant because it shows protocol behavior changed inside the surviving ten-commit window.
-3. By commit `40f29a2ce1872abbfcbb332c962de34d4e2183a9` on October 6, the source comments and genesis code explicitly use `1111111111111111111114oLvT2` as the marker separating colored outputs from metadata.
+2. The October 1 commit is explicitly titled `Bugfixes and one protocol fix`; its diff changes genesis construction so that a mandatory change output is appended and transaction construction treats the final output as change. Before it, `mkgenesis` called node-sx `send_to_outputs` with `excessIndex = 0`, which (in node-sx `a7cc669`, committed about ten hours after the root commit and assumed for it) added the funder's change to the first colored output. The same commit also moved `m.send`'s excess from the recipient output to a new aux output 1; the commit message does not say which change is the protocol fix (see `docs/reconstruction/VBUTERIN_2013_KERNEL.md`). This is historically significant because it shows protocol behavior changed inside the surviving ten-commit window.
+3. The source comments and genesis code use `1111111111111111111114oLvT2` as the marker separating colored outputs from metadata from the root commit `aa2bc9fb1f5cbe7035df541efe636420457f045c` onward. *(Corrected 2026-09-30: an earlier revision of this record dated the marker to commit `40f29a2ce1872abbfcbb332c962de34d4e2183a9`; per-commit inspection of the archived bundle shows it in all ten commits.)*
 4. `main.js` contains routines named `find_genesis`, `find_current_owner`, and `get_metadata`, showing that this implementation explicitly attempted to trace a colored unit back to genesis and forward to its current owner.
 5. The code uses an order/offset-based flow model across transaction inputs and outputs. Any modern reimplementation must be tested commit-by-commit where protocol behavior differs, rather than assuming the tip represents every earlier transaction.
 
@@ -85,9 +87,8 @@ No file from the historical repository is to be silently corrected, reformatted,
 
 ## Next archival actions
 
-1. Create an independent immutable snapshot of the complete ten-commit history through `6ae3d0e309543997e427942c72bb1893584ea7fe`.
-2. Calculate and publish an independent checksum for that snapshot or Git bundle.
-3. Extract deterministic protocol test vectors from the root, October 1 protocol-fix state, and final October 6 state.
+1. ~~Create an independent immutable snapshot of the complete ten-commit history through `6ae3d0e309543997e427942c72bb1893584ea7fe`.~~ Done 2026-09-30: `historical/sources/vbuterin-coloredcoins-2013/vbuterin-coloredcoins-2013.bundle` (both refs, complete history).
+2. ~~Calculate and publish an independent checksum for that snapshot or Git bundle.~~ Done: SHA-256 in `historical/sources/vbuterin-coloredcoins-2013/MANIFEST.json`, checked by `tests/test_vbuterin_2013.py`.
+3. ~~Extract deterministic protocol test vectors from the root, October 1 protocol-fix state, and final October 6 state.~~ Done: `historical/test-vectors/vbuterin_coloredcoins_2013.json`; kernel and defect analysis in `docs/reconstruction/VBUTERIN_2013_KERNEL.md`. The October 1 and October 6 states share one ruleset.
 4. Search historical Bitcoin transactions for marker-compatible genesis candidates and validate them against the correct historical rule set.
-
-A Git bundle or bare mirror is preferred for the long-term archive because it preserves repository history rather than only the working-tree files.
+5. Record an archive reference independent of GitHub (for example Software Heritage) for the repository.

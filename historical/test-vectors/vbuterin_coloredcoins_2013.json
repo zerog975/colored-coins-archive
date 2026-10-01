@@ -1,0 +1,348 @@
+{
+  "source_repository": "https://github.com/vbuterin/coloredcoins",
+  "source_branch": "coloredcoins",
+  "rulesets": {
+    "vbuterin-coloredcoins-2013-09-27": "aa2bc9fb1f5cbe7035df541efe636420457f045c",
+    "vbuterin-coloredcoins-2013-10-01": "debeddc6922d2a4e337dcfcb6bcb79e4eac0b13c"
+  },
+  "marker": {
+    "address": "1111111111111111111114oLvT2",
+    "hash160_hex": "0000000000000000000000000000000000000000",
+    "script_pubkey_hex": "76a914000000000000000000000000000000000000000088ac",
+    "source": "main.js, all ten commits: { address: '1111111111111111111114oLvT2', value: 10000 }"
+  },
+  "base58check_reference": {
+    "note": "Independent Bitcoin wiki reference value, not from the historical source.",
+    "hash160_hex": "010966776006953d5567439e5e39f86a0d273bee",
+    "address": "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM"
+  },
+  "metadata_vectors": [
+    {
+      "name": "empty metadata yields no metadata outputs",
+      "metadata_hex": "",
+      "chunks_hex": []
+    },
+    {
+      "name": "exactly 20 bytes yields one unpadded chunk",
+      "metadata_hex": "3031323334353637383930313233343536373839",
+      "chunks_hex": [
+        "3031323334353637383930313233343536373839"
+      ]
+    },
+    {
+      "name": "29 bytes pads the second chunk with NULs",
+      "metadata_hex": "436f6c6f72656420636f696e3a20474f4c442d4f554e43452d32303133",
+      "chunks_hex": [
+        "436f6c6f72656420636f696e3a20474f4c442d4f",
+        "554e43452d323031330000000000000000000000"
+      ]
+    }
+  ],
+  "trace_vectors": [
+    {
+      "name": "output 2 offset 5000 lands in input 2",
+      "output_values": [
+        10000,
+        10000,
+        10000
+      ],
+      "index": 2,
+      "offset": 5000,
+      "input_prevout_values": [
+        10000,
+        10000,
+        20000
+      ],
+      "expected": {
+        "index": 2,
+        "offset": 5000
+      }
+    },
+    {
+      "name": "offset zero of output 0 is input 0 offset 0",
+      "output_values": [
+        10000,
+        10000
+      ],
+      "index": 0,
+      "offset": 0,
+      "input_prevout_values": [
+        15000,
+        5000
+      ],
+      "expected": {
+        "index": 0,
+        "offset": 0
+      }
+    },
+    {
+      "name": "first satoshi of output 1 is first satoshi of input 1",
+      "output_values": [
+        10000,
+        10000
+      ],
+      "index": 1,
+      "offset": 0,
+      "input_prevout_values": [
+        10000,
+        10000
+      ],
+      "expected": {
+        "index": 1,
+        "offset": 0
+      }
+    },
+    {
+      "name": "last satoshi of input 0 stays on input 0",
+      "output_values": [
+        15000
+      ],
+      "index": 0,
+      "offset": 9999,
+      "input_prevout_values": [
+        10000,
+        5000
+      ],
+      "expected": {
+        "index": 0,
+        "offset": 9999
+      }
+    },
+    {
+      "name": "position equal to input 0 value moves to input 1",
+      "output_values": [
+        15000
+      ],
+      "index": 0,
+      "offset": 10000,
+      "input_prevout_values": [
+        10000,
+        5000
+      ],
+      "expected": {
+        "index": 1,
+        "offset": 0
+      }
+    },
+    {
+      "name": "position beyond all inputs has no parent",
+      "output_values": [
+        30000
+      ],
+      "index": 0,
+      "offset": 20000,
+      "input_prevout_values": [
+        10000,
+        5000
+      ],
+      "expected": null
+    },
+    {
+      "name": "offset equal to output value is out of range",
+      "output_values": [
+        10000
+      ],
+      "index": 0,
+      "offset": 10000,
+      "input_prevout_values": [
+        10000,
+        5000
+      ],
+      "expected_error": "ValueError"
+    }
+  ],
+  "genesis_layout_vectors": [
+    {
+      "name": "root ruleset merges change into first colored output",
+      "ruleset": "vbuterin-coloredcoins-2013-09-27",
+      "colored_count": 2,
+      "metadata_hex": "436f6c6f72656420636f696e3a20474f4c442d4f554e43452d32303133",
+      "excess_sats": 123456,
+      "expected_roles": [
+        "colored",
+        "colored",
+        "marker",
+        "metadata",
+        "metadata"
+      ],
+      "expected_values": [
+        133456,
+        10000,
+        10000,
+        10000,
+        10000
+      ]
+    },
+    {
+      "name": "protocol-fix ruleset appends mandatory change after metadata",
+      "ruleset": "vbuterin-coloredcoins-2013-10-01",
+      "colored_count": 2,
+      "metadata_hex": "436f6c6f72656420636f696e3a20474f4c442d4f554e43452d32303133",
+      "excess_sats": 123456,
+      "expected_roles": [
+        "colored",
+        "colored",
+        "marker",
+        "metadata",
+        "metadata",
+        "change"
+      ],
+      "expected_values": [
+        10000,
+        10000,
+        10000,
+        10000,
+        10000,
+        133456
+      ]
+    },
+    {
+      "name": "root ruleset: negative excess (node-sx a7cc669 selected inputs for the fee only) lowers the first colored output",
+      "ruleset": "vbuterin-coloredcoins-2013-09-27",
+      "colored_count": 1,
+      "metadata_hex": "",
+      "excess_sats": -5000,
+      "expected_roles": [
+        "colored",
+        "marker"
+      ],
+      "expected_values": [
+        5000,
+        10000
+      ]
+    }
+  ],
+  "send_layout_vectors": [
+    {
+      "name": "root send merges change into recipient output",
+      "ruleset": "vbuterin-coloredcoins-2013-09-27",
+      "metadata_hex": "",
+      "excess_sats": 5000,
+      "expected_roles": [
+        "recipient"
+      ],
+      "expected_values": [
+        15000
+      ]
+    },
+    {
+      "name": "protocol-fix send routes change to aux output 1",
+      "ruleset": "vbuterin-coloredcoins-2013-10-01",
+      "metadata_hex": "3031323334353637383930313233343536373839",
+      "excess_sats": 5000,
+      "expected_roles": [
+        "recipient",
+        "aux",
+        "metadata"
+      ],
+      "expected_values": [
+        10000,
+        15000,
+        10000
+      ]
+    }
+  ],
+  "trace_convention": "Offsets read as 0-based (an interpretation: find_current_owner defaults offset = 0, not a valid position under 1-based offsets); the kernel advances while position >= input value. The historical loop used '>', correct for 1-based offsets and off by one under the 0-based reading; see docs/COMPATIBILITY.md.",
+  "as_executed_parent_helper_vectors": [
+    {
+      "name": "index 0: hoisted offset gives NaN",
+      "output_values": [
+        10000,
+        10000,
+        10000
+      ],
+      "index": 0,
+      "offset": 5000,
+      "input_prevout_values": [
+        10000,
+        10000,
+        20000
+      ],
+      "expected_index": 0,
+      "expected_position": "NaN"
+    },
+    {
+      "name": "index 1: variadic sx.add reduce gives a string",
+      "output_values": [
+        10000,
+        10000,
+        10000
+      ],
+      "index": 1,
+      "offset": 5000,
+      "input_prevout_values": [
+        10000,
+        10000,
+        20000
+      ],
+      "expected_index": 0,
+      "expected_position": "1000010000undefined"
+    },
+    {
+      "name": "index 2: variadic sx.add reduce gives a string",
+      "output_values": [
+        10000,
+        10000,
+        10000
+      ],
+      "index": 2,
+      "offset": 5000,
+      "input_prevout_values": [
+        10000,
+        10000,
+        20000
+      ],
+      "expected_index": 0,
+      "expected_position": "01000010000,1000010000110000,10000undefined"
+    }
+  ],
+  "as_executed_parent_helper_source": "Positions obtained by running the verbatim get_parent_helper callback body under Node.js with node-sx a7cc669/fb3c847 getter, plus and add.",
+  "fee_vectors": [
+    {
+      "commit": "aa2bc9fb1f5cbe7035df541efe636420457f045c",
+      "tx_size_bytes": 1,
+      "expected": 10000
+    },
+    {
+      "commit": "aa2bc9fb1f5cbe7035df541efe636420457f045c",
+      "tx_size_bytes": 1024,
+      "expected": 10000
+    },
+    {
+      "commit": "aa2bc9fb1f5cbe7035df541efe636420457f045c",
+      "tx_size_bytes": 1025,
+      "expected": 20000
+    },
+    {
+      "commit": "debeddc6922d2a4e337dcfcb6bcb79e4eac0b13c",
+      "tx_size_bytes": 2048,
+      "expected": 20000
+    },
+    {
+      "commit": "debeddc6922d2a4e337dcfcb6bcb79e4eac0b13c",
+      "tx_size_bytes": 2049,
+      "expected": 30000
+    },
+    {
+      "commit": "6ae3d0e309543997e427942c72bb1893584ea7fe",
+      "tx_size_bytes": 1023,
+      "expected": 10000
+    },
+    {
+      "commit": "6ae3d0e309543997e427942c72bb1893584ea7fe",
+      "tx_size_bytes": 1025,
+      "expected": 20000
+    },
+    {
+      "commit": "6ae3d0e309543997e427942c72bb1893584ea7fe",
+      "tx_size_bytes": 1024,
+      "expected_error": "NonTerminatingFeeLoop"
+    },
+    {
+      "commit": "40f29a2ce1872abbfcbb332c962de34d4e2183a9",
+      "tx_size_bytes": 2048,
+      "expected_error": "NonTerminatingFeeLoop"
+    }
+  ],
+  "fee_source": "main.js comment 'fee = 0.0001 * ceil(txsize / 1024 bytes)'; node-sx send_to_outputs applies ceil(hexlen/2048) to the hex string from sx mktx (a7cc669); fb3c847 tests ceil((hexlen+2)/2048) but sets ceil(hexlen/2048), so a trial of 2048*k hex chars at multiplier k never terminates. Vectors assume a size stable across retries."
+}

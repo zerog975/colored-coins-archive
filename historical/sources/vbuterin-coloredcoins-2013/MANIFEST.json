@@ -1,0 +1,220 @@
+{
+  "artifact_id": "vbuterin-coloredcoins-2013-git-bundle",
+  "status": "verified-snapshot",
+  "canonical_url": "https://github.com/vbuterin/coloredcoins",
+  "retrieval_date": "2026-09-30",
+  "retrieval_method": "git clone --mirror https://github.com/vbuterin/coloredcoins.git; git bundle create --all",
+  "bundle": {
+    "path": "historical/sources/vbuterin-coloredcoins-2013/vbuterin-coloredcoins-2013.bundle",
+    "sha256": "85556b4f53d5751c8562fb6c0e08c9862dd10069cf7a9e9db962007643dce823",
+    "size_bytes": 11672,
+    "git_version_used": "2.43.0",
+    "hash_algorithm": "sha1",
+    "verify_command": "git bundle verify vbuterin-coloredcoins-2013.bundle",
+    "restore_command": "git clone --mirror vbuterin-coloredcoins-2013.bundle coloredcoins.git",
+    "note": "The bundle SHA-256 identifies this archive file only. The canonical identity of the history is the commit hashes below; a bundle regenerated with another Git version may differ byte-wise while containing identical commits.",
+    "restore_note": "--mirror restores exactly refs/heads/coloredcoins, refs/heads/master and HEAD -> refs/heads/coloredcoins. A plain 'git clone' of the bundle checks out coloredcoins but leaves master only as origin/master. With git 2.43.0, 'git bundle create <out> --all' in the restored mirror reproduces the recorded SHA-256 and size byte-for-byte."
+  },
+  "refs": {
+    "HEAD": "refs/heads/coloredcoins",
+    "refs/heads/coloredcoins": "6ae3d0e309543997e427942c72bb1893584ea7fe",
+    "refs/heads/master": "4579b8e0293410ddbee002003f854fc9c77efcbf"
+  },
+  "refs_note": "refs/heads/master is an ancestor of refs/heads/coloredcoins (commit 8 of 10). It was not recorded in the 2026-09-13 provenance record and is preserved here because it is a surviving historical ref.",
+  "commits": [
+    {
+      "n": 1,
+      "commit": "aa2bc9fb1f5cbe7035df541efe636420457f045c",
+      "author_date": "2013-09-27T18:09:50-04:00",
+      "message": "First commit"
+    },
+    {
+      "n": 2,
+      "commit": "debeddc6922d2a4e337dcfcb6bcb79e4eac0b13c",
+      "author_date": "2013-10-01T09:13:55-04:00",
+      "message": "Bugfixes and one protocol fix"
+    },
+    {
+      "n": 3,
+      "commit": "40f29a2ce1872abbfcbb332c962de34d4e2183a9",
+      "author_date": "2013-10-06T02:42:44-04:00",
+      "message": "Made some API changes"
+    },
+    {
+      "n": 4,
+      "commit": "72a1c4aa2f264a8952f3cbe5bc154b234a626bc4",
+      "author_date": "2013-10-06T03:07:56-04:00",
+      "message": "debug"
+    },
+    {
+      "n": 5,
+      "commit": "c93f8b12c4bfedd6ab29970adaf33a0871b8e063",
+      "author_date": "2013-10-06T03:46:06-04:00",
+      "message": "Added logging and fixed some bugs"
+    },
+    {
+      "n": 6,
+      "commit": "600a9156d2edc172c00907d88da2f62044414167",
+      "author_date": "2013-10-06T03:57:45-04:00",
+      "message": "Small bugfix"
+    },
+    {
+      "n": 7,
+      "commit": "62b431f37c27b7bdd0bef8fcc300f78c59e795c8",
+      "author_date": "2013-10-06T04:09:33-04:00",
+      "message": "Fixed small bug and added readme"
+    },
+    {
+      "n": 8,
+      "commit": "4579b8e0293410ddbee002003f854fc9c77efcbf",
+      "author_date": "2013-10-06T04:12:24-04:00",
+      "message": "Moved readme to license"
+    },
+    {
+      "n": 9,
+      "commit": "81815df28236a9b7dedf309a2df4a9d38fcfc2a7",
+      "author_date": "2013-10-06T07:49:45-04:00",
+      "message": "Added more debug checking"
+    },
+    {
+      "n": 10,
+      "commit": "6ae3d0e309543997e427942c72bb1893584ea7fe",
+      "author_date": "2013-10-06T08:01:37-04:00",
+      "message": "Added change address to mkgenesis"
+    }
+  ],
+  "trees": {
+    "aa2bc9fb1f5cbe7035df541efe636420457f045c": {
+      "apicli.py": "9d9361de034582c81856a9969102815cefe57467",
+      "main.js": "d8f1f0c2d7db81c31b522ad42369c2b59924e8bd",
+      "package.json": "db03851587425e28bbd692c399dd6609334df3c4",
+      "test.js": "1aa967b3f32a84d7430800252a592b82d45a36c3"
+    },
+    "debeddc6922d2a4e337dcfcb6bcb79e4eac0b13c": {
+      "apicli.py": "9d9361de034582c81856a9969102815cefe57467",
+      "main.js": "2b10f4d1238f6de021b698589a1ae34207d337d3",
+      "package.json": "db03851587425e28bbd692c399dd6609334df3c4",
+      "test.js": "1aa967b3f32a84d7430800252a592b82d45a36c3"
+    },
+    "6ae3d0e309543997e427942c72bb1893584ea7fe": {
+      "LICENSE": "370ff710754fbf5ae39fbf727c68a5afc2cdcb6d",
+      "apicli.py": "9d9361de034582c81856a9969102815cefe57467",
+      "main.js": "acd8c940482e855b871989611b693c8b801cf566",
+      "package.json": "c625ba3202d1e7700331ccef426dbfa6c930f7db",
+      "test.js": "1aa967b3f32a84d7430800252a592b82d45a36c3"
+    }
+  },
+  "license": "Public domain with MIT fallback, Copyright (c) 2013 Vitalik Buterin. The license text (blob 370ff710754fbf5ae39fbf727c68a5afc2cdcb6d) was first committed as README.md in 62b431f37c27b7bdd0bef8fcc300f78c59e795c8 (commit 7) and renamed unchanged to LICENSE in 4579b8e0293410ddbee002003f854fc9c77efcbf (commit 8); commits 1-6 carry no license file.",
+  "dependency_reference": {
+    "repository": "https://github.com/vbuterin/node-sx",
+    "role": "Loaded as require('../node-sx'), a local checkout; supplies send_to_outputs, mktx, base58check_encode, showtx, add/plus/getter and wraps the libbitcoin 'sx' CLI.",
+    "declared_ranges": [
+      {
+        "commits": [
+          "aa2bc9fb1f5cbe7035df541efe636420457f045c",
+          "debeddc6922d2a4e337dcfcb6bcb79e4eac0b13c",
+          "40f29a2ce1872abbfcbb332c962de34d4e2183a9",
+          "72a1c4aa2f264a8952f3cbe5bc154b234a626bc4",
+          "c93f8b12c4bfedd6ab29970adaf33a0871b8e063",
+          "600a9156d2edc172c00907d88da2f62044414167",
+          "62b431f37c27b7bdd0bef8fcc300f78c59e795c8",
+          "4579b8e0293410ddbee002003f854fc9c77efcbf"
+        ],
+        "package_json_node_sx": ">= 0.0.17"
+      },
+      {
+        "commits": [
+          "81815df28236a9b7dedf309a2df4a9d38fcfc2a7",
+          "6ae3d0e309543997e427942c72bb1893584ea7fe"
+        ],
+        "package_json_node_sx": ">= 0.0.19"
+      }
+    ],
+    "node_sx_commits": [
+      {
+        "commit": "05f4f7d9b54622279de6ad858a0a98c38fa2d945",
+        "author_date": "2013-09-24T11:23:22-04:00",
+        "version": "0.0.17",
+        "note": "In effect by date at the root commit. Its send_to_outputs cannot run (undeclared h, cb3, cb2; ReferenceError) and its excess line adds in_value - out_value with no '- fee' (a fee allowance is subtracted when it overwrites outputs[0].value); it has no m.plus, which root main.js calls."
+      },
+      {
+        "commit": "a7cc669241c4051ace2494c9f5ec38863645c378",
+        "author_date": "2013-09-28T04:10:13-04:00",
+        "version": "0.0.17",
+        "note": "About 10 hours AFTER the root commit. First node-sx with m.plus. Selects inputs covering only the fee; send_to_outputs adds in_value - out_value - fee to outs[excessIndex] with no check; fee 10000*ceil(hexlen/2048)."
+      },
+      {
+        "commit": "8654f33e00d536ee01f1f9b568efd990fc01c739",
+        "author_date": "2013-10-01T09:15:51-04:00",
+        "version": "0.0.17",
+        "note": "116 s after debeddc. Input selection changes from fee to out_value + fee; excess formula unchanged."
+      },
+      {
+        "commit": "2e5f44a2bad0f1b23333831f531bd305a12e684e",
+        "author_date": "2013-10-01T09:16:02-04:00",
+        "version": "0.0.18",
+        "note": "Version bump only."
+      },
+      {
+        "commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "author_date": "2013-10-06T02:34:40-04:00",
+        "version": "0.0.19",
+        "note": "Precedes 40f29a2. Removes sx.cbmap (commits 3-10 no longer use it). Fee loop tests ceil((hexlen+2)/2048) but sets ceil(hexlen/2048): once a trial of 2048*k hex chars occurs at multiplier k the loop never ends (always for k = 1; for k >= 2 when the higher fee selects the same inputs)."
+      }
+    ],
+    "assumed_pairing": [
+      {
+        "coloredcoins_commit": "aa2bc9fb1f5cbe7035df541efe636420457f045c",
+        "node_sx_commit": "a7cc669241c4051ace2494c9f5ec38863645c378",
+        "basis": "inferred: root main.js uses sx.plus, first present in a7cc669; the node-sx committed by that date (05f4f7d) cannot execute send_to_outputs. The working copy actually used is not recorded."
+      },
+      {
+        "coloredcoins_commit": "debeddc6922d2a4e337dcfcb6bcb79e4eac0b13c",
+        "node_sx_commit": "a7cc669241c4051ace2494c9f5ec38863645c378",
+        "basis": "by date; ambiguous, because 8654f33 and 2e5f44a were committed about two minutes later."
+      },
+      {
+        "coloredcoins_commit": "40f29a2ce1872abbfcbb332c962de34d4e2183a9",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      },
+      {
+        "coloredcoins_commit": "72a1c4aa2f264a8952f3cbe5bc154b234a626bc4",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      },
+      {
+        "coloredcoins_commit": "c93f8b12c4bfedd6ab29970adaf33a0871b8e063",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      },
+      {
+        "coloredcoins_commit": "600a9156d2edc172c00907d88da2f62044414167",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      },
+      {
+        "coloredcoins_commit": "62b431f37c27b7bdd0bef8fcc300f78c59e795c8",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      },
+      {
+        "coloredcoins_commit": "4579b8e0293410ddbee002003f854fc9c77efcbf",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      },
+      {
+        "coloredcoins_commit": "81815df28236a9b7dedf309a2df4a9d38fcfc2a7",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      },
+      {
+        "coloredcoins_commit": "6ae3d0e309543997e427942c72bb1893584ea7fe",
+        "node_sx_commit": "fb3c847fefed9070735c64473e28f875169a7744",
+        "basis": "by date and by removal of sx.cbmap"
+      }
+    ],
+    "archived_here": false
+  },
+  "independent_archive_reference": "none recorded yet"
+}
