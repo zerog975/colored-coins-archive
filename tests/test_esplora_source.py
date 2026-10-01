@@ -155,3 +155,49 @@ class EsploraSourceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EsploraRetryTests(unittest.TestCase):
+    def _source(self, outcomes):
+        from email.message import Message
+        from urllib.error import HTTPError
+
+        sleeps = []
+        source = EsploraSource("https://example.invalid", network_label="fixture",
+                               max_retries=3, sleep=sleeps.append)
+        calls = []
+
+        def once(url):
+            calls.append(url)
+            outcome = outcomes.pop(0)
+            if isinstance(outcome, int):
+                headers = Message()
+                if outcome == 429:
+                    headers["Retry-After"] = "7"
+                raise HTTPError(url, outcome, "error", headers, None)
+            return outcome
+
+        source._http_get_json_once = once
+        return source, calls, sleeps
+
+    def test_rate_limit_is_retried_with_retry_after(self):
+        source, calls, sleeps = self._source([429, 503, {"ok": True}])
+        self.assertEqual(source._http_get_json("u"), {"ok": True})
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(sleeps, [7.0, 4.0])
+
+    def test_client_error_is_not_retried(self):
+        from indexer.sources.esplora import EsploraError
+
+        source, calls, _ = self._source([400])
+        with self.assertRaises(EsploraError):
+            source._http_get_json("u")
+        self.assertEqual(len(calls), 1)
+
+    def test_retries_are_bounded(self):
+        from indexer.sources.esplora import EsploraError
+
+        source, calls, _ = self._source([429] * 4)
+        with self.assertRaises(EsploraError):
+            source._http_get_json("u")
+        self.assertEqual(len(calls), 4)

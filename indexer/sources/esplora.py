@@ -7,7 +7,9 @@ is no transaction-broadcast method.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import time
 from typing import Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -33,12 +35,19 @@ class EsploraSource(TransactionSource):
         timeout: float = 15.0,
         resolve_tx_index: bool = True,
         fetch_json: JsonFetcher | None = None,
+        request_delay: float = 0.0,
+        max_retries: int = 6,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.network_label = network_label
         self.timeout = timeout
         self.resolve_tx_index = resolve_tx_index
         self._fetch_json = fetch_json or self._http_get_json
+        self.request_delay = request_delay
+        self.max_retries = max_retries
+        self._sleep = sleep
+        self._last_request = 0.0
         self._tx_cache: dict[str, TxRecord | None] = {}
         self._outspend_cache: dict[tuple[str, int], str | None] = {}
         self._block_txids_cache: dict[str, tuple[str, ...]] = {}
@@ -47,6 +56,28 @@ class EsploraSource(TransactionSource):
         return f"{self.base_url}{path}"
 
     def _http_get_json(self, url: str) -> object:
+        """GET with a minimum spacing between requests and retries on 429/5xx."""
+
+        for attempt in range(self.max_retries + 1):
+            wait = self.request_delay - (time.monotonic() - self._last_request)
+            if wait > 0:
+                self._sleep(wait)
+            self._last_request = time.monotonic()
+            try:
+                return self._http_get_json_once(url)
+            except HTTPError as exc:
+                retryable = exc.code == 429 or 500 <= exc.code < 600
+                if not retryable or attempt == self.max_retries:
+                    raise EsploraError(f"HTTP {exc.code} from {url}") from exc
+                retry_after = exc.headers.get("Retry-After") if exc.headers else None
+                try:
+                    backoff = float(retry_after) if retry_after else 2.0 ** (attempt + 1)
+                except ValueError:
+                    backoff = 2.0 ** (attempt + 1)
+                self._sleep(min(backoff, 300.0))
+        raise AssertionError("unreachable")
+
+    def _http_get_json_once(self, url: str) -> object:
         request = Request(
             url,
             headers={
@@ -61,7 +92,7 @@ class EsploraSource(TransactionSource):
         except HTTPError as exc:
             if exc.code == 404:
                 return None
-            raise EsploraError(f"HTTP {exc.code} from {url}") from exc
+            raise
         except (URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise EsploraError(f"failed to read {url}: {exc}") from exc
 
@@ -152,14 +183,17 @@ class EsploraSource(TransactionSource):
         self._tx_cache[txid] = record
         return record
 
-    def address_chain_txs_page(self, address: str, last_seen_txid: str | None = None) -> list[dict]:
-        """One page (newest first) of confirmed transactions involving ``address``.
+    def script_chain_txs_page(self, script_pubkey_hex: str, last_seen_txid: str | None = None) -> list[dict]:
+        """One page (newest first) of confirmed transactions involving a script.
 
-        Esplora returns up to 25 transactions per page as raw JSON, including
-        each input's ``prevout``. Pass the last TXID of a page to read the next.
+        Uses the Esplora scripthash index (SHA-256 of the script, byte-reversed),
+        which works on every network, unlike address strings. Esplora returns
+        up to 25 transactions per page as raw JSON, including each input's
+        ``prevout``. Pass the last TXID of a page to read the next.
         """
 
-        path = f"/api/address/{address}/txs/chain"
+        scripthash = hashlib.sha256(bytes.fromhex(script_pubkey_hex)).digest()[::-1].hex()
+        path = f"/api/scripthash/{scripthash}/txs/chain"
         if last_seen_txid:
             path += f"/{last_seen_txid}"
         data = self._read(path)

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Find and trace every coin issued with the 2013 vbuterin/coloredcoins tool.
 
-1. Discovery: page through the confirmed transactions of the marker address
-   1111111111111111111114oLvT2 (newest first) back to the root commit date,
+1. Discovery: page through the confirmed transactions of the marker script
+   (address 1111111111111111111114oLvT2 on mainnet; queried by scripthash so
+   it also works on testnet), newest first, back to the root commit date,
    or read candidate TXIDs from a file (for example the output of Bitcoin
    Core ``scantxoutset start '["raw(76a914<40 zeros>88ac)"]'``).
 2. Assessment: compare each candidate with the historical genesis layouts.
@@ -55,6 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--candidates-file", type=Path,
                         help="JSON list of TXIDs, or scantxoutset output, instead of address paging")
     parser.add_argument("--no-verify", action="store_true", help="Skip find_genesis cross-checks")
+    parser.add_argument("--request-delay", type=float, default=0.5,
+                        help="Minimum seconds between HTTP requests (default 0.5); 429s are retried with backoff")
     return parser
 
 
@@ -71,8 +74,12 @@ def discover_by_address(source: EsploraSource, args) -> tuple[list[CandidateAsse
         if stats["pages_read"] >= args.max_pages:
             stats["page_limit_hit"] = True
             break
-        page = source.address_chain_txs_page(vb.MARKER_ADDRESS, last_seen)
+        page = source.script_chain_txs_page(vb.MARKER_SCRIPT_HEX, last_seen)
         stats["pages_read"] += 1
+        if stats["pages_read"] % 50 == 0:
+            oldest = (page[-1].get("status") or {}).get("block_time") if page else None
+            print(f"pages={stats['pages_read']} seen={stats['transactions_seen']} oldest_block_time={oldest}",
+                  file=sys.stderr, flush=True)
         if not page:
             stats["reached_start_time"] = True  # address history exhausted
             break
@@ -187,7 +194,7 @@ def lineage_json(r: LineageResult) -> dict:
 
 def main() -> int:
     args = build_parser().parse_args()
-    source = EsploraSource(args.base_url, network_label=args.network)
+    source = EsploraSource(args.base_url, network_label=args.network, request_delay=args.request_delay)
     payload: dict = {"network": args.network, "base_url": args.base_url,
                      "marker_address": vb.MARKER_ADDRESS,
                      "window": {"start_time": args.start_time, "end_time": args.end_time}}
