@@ -11,6 +11,7 @@ on:
       - "indexer/vbuterin_2013_census.py"
       - "indexer/protocols/vbuterin_2013.py"
       - "indexer/sources/esplora.py"
+      - "scripts/summarize_vbuterin_2013_census.py"
   workflow_dispatch:
     inputs:
       network:
@@ -35,15 +36,19 @@ jobs:
       matrix:
         include:
           - label: mempool-mainnet
+            request_delay: 1.0
             base_url: https://mempool.space
             network: bitcoin-mainnet
           - label: blockstream-mainnet
+            request_delay: 2.0
             base_url: https://blockstream.info
             network: bitcoin-mainnet
           - label: mempool-testnet3
+            request_delay: 1.0
             base_url: https://mempool.space/testnet
             network: bitcoin-testnet3
           - label: blockstream-testnet3
+            request_delay: 2.0
             base_url: https://blockstream.info/testnet
             network: bitcoin-testnet3
 
@@ -64,18 +69,14 @@ jobs:
           python scripts/census_vbuterin_2013.py \
             --base-url "${{ matrix.base_url }}" \
             --network "${{ matrix.network }}" \
+            --request-delay "${{ matrix.request_delay }}" \
             ${{ inputs.start_after && format('--start-after {0}', inputs.start_after) || '' }} \
             ${{ inputs.candidates_file && format('--candidates-file {0}', inputs.candidates_file) || '' }} \
             > "results/${{ matrix.label }}.json"
           code=$?
           set -e
           echo "census_exit_code=$code"
-          python - "results/${{ matrix.label }}.json" <<'EOF'
-          import json, sys
-          data = json.load(open(sys.argv[1]))
-          print(json.dumps({k: data.get(k) for k in ("status", "error", "discovery", "summary")}, indent=2))
-          print("consistent candidates:", [c["txid"] for c in data.get("candidates", []) if c["matching_rulesets"]])
-          EOF
+          python scripts/summarize_vbuterin_2013_census.py "results/${{ matrix.label }}.json"
 
       - name: Upload census evidence
         if: >-

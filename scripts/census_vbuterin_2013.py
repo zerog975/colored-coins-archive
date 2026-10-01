@@ -141,15 +141,22 @@ def load_candidate_txids(path: Path) -> list[str]:
 def discover_from_file(source: EsploraSource, args) -> tuple[list[CandidateAssessment], dict]:
     txids = load_candidate_txids(args.candidates_file)
     found = []
+    lookup_errors: list[dict] = []
+    missing: list[str] = []
     for txid in txids:
-        tx = source.get_transaction(txid)
-        if tx is None:
+        try:
+            tx = source.get_transaction(txid)
+            if tx is None:
+                missing.append(txid)
+                continue
+            input_values = None
+            if not tx.is_coinbase:
+                parents = [source.get_transaction(i.prev_txid) for i in tx.inputs]
+                if all(parents):
+                    input_values = [p.outputs[i.prev_vout].value_sats for p, i in zip(parents, tx.inputs)]
+        except EsploraError as exc:
+            lookup_errors.append({"txid": txid, "error": str(exc)})  # unassessed, not rejected
             continue
-        input_values = None
-        if not tx.is_coinbase:
-            parents = [source.get_transaction(i.prev_txid) for i in tx.inputs]
-            if all(parents):
-                input_values = [p.outputs[i.prev_vout].value_sats for p, i in zip(parents, tx.inputs)]
         found.append(assess_genesis_candidate(
             txid,
             [o.value_sats for o in tx.outputs],
@@ -159,7 +166,11 @@ def discover_from_file(source: EsploraSource, args) -> tuple[list[CandidateAsses
             block_time=tx.block_time,
         ))
     found.sort(key=lambda a: (a.block_height or 0, a.txid))
-    return found, {"method": "candidates-file", "file": str(args.candidates_file), "txids": len(txids)}
+    stats = {"method": "candidates-file", "file": str(args.candidates_file), "txids": len(txids),
+             "assessed": len(found), "missing": missing, "lookup_errors": lookup_errors}
+    if lookup_errors:
+        stats["error"] = f"{len(lookup_errors)} candidate(s) could not be fetched; see lookup_errors"
+    return found, stats
 
 
 def assessment_json(a: CandidateAssessment) -> dict:
@@ -227,9 +238,15 @@ def main() -> int:
         payload["candidates"] = [assessment_json(a) for a in candidates]
         census = Vbuterin2013Census(source, max_transactions=args.max_transactions,
                                     verify=not args.no_verify)
-        payload["lineages"] = [
-            lineage_json(census.trace(a.txid, a.colored_vouts)) for a in candidates if a.consistent
-        ]
+        payload["lineages"] = []
+        for a in candidates:
+            if not a.consistent:
+                continue
+            try:
+                payload["lineages"].append(lineage_json(census.trace(a.txid, a.colored_vouts)))
+            except EsploraError as exc:
+                payload["lineages"].append({"genesis_txid": a.txid, "error": str(exc), "truncated": True,
+                                            "issued_sats": 0, "held_sats": 0, "burned_to_fees_sats": 0})
     except EsploraError as exc:
         payload["status"] = "lookup-error"
         payload["error"] = str(exc)
