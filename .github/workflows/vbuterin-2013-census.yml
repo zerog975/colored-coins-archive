@@ -19,6 +19,9 @@ on:
       start_after:
         description: "Resume address paging after this TXID (resume_after from a previous run of the same network)"
         default: ""
+      candidates_file:
+        description: "Repository path of a candidate list (e.g. scantxoutset output) to assess instead of address paging"
+        default: ""
 
 permissions:
   contents: read
@@ -62,6 +65,7 @@ jobs:
             --base-url "${{ matrix.base_url }}" \
             --network "${{ matrix.network }}" \
             ${{ inputs.start_after && format('--start-after {0}', inputs.start_after) || '' }} \
+            ${{ inputs.candidates_file && format('--candidates-file {0}', inputs.candidates_file) || '' }} \
             > "results/${{ matrix.label }}.json"
           code=$?
           set -e
