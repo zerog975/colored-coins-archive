@@ -1,0 +1,36 @@
+name: Export census artifacts to log
+
+# Prints the JSON results of a census run into the job log (gzip + base64,
+# with SHA-256), for environments that can read job logs but cannot reach
+# GitHub's artifact storage. Read-only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Workflow run ID whose census artifacts to export"
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: vbuterin-2013-census-*
+          path: artifacts
+
+      - name: Print artifacts
+        shell: bash
+        run: |
+          for f in $(find artifacts -name '*.json' | sort); do
+            echo "=====BEGIN $(basename "$f") sha256=$(sha256sum "$f" | cut -d' ' -f1) bytes=$(stat -c%s "$f")====="
+            gzip -9c "$f" | base64 -w 100
+            echo "=====END $(basename "$f")====="
+          done
