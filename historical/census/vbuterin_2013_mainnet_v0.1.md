@@ -202,10 +202,10 @@ Not counted above. From [`vbuterin_2013_mainnet_prerelease.json`](vbuterin_2013_
 
 Current holders (the address of each unspent output now carrying the colored sats):
 
-| # | Holder address | Output | Colored sats | Since block |
-|---:|---|---|---:|---:|
-| P1 | [`1NjWmLj29j8ibgzNVsEBr6pc5bq6jSsjzV`](https://mempool.space/address/1NjWmLj29j8ibgzNVsEBr6pc5bq6jSsjzV) | [`ca2b7b61417ccf5b…:0`](https://mempool.space/tx/ca2b7b61417ccf5b1206a9bb5a162c7778c75095bd1c73ca9ed654657a05d067#vout=0) | 10,000 | 969218 |
-| P1 | [`1HLHwz6yh5E38fdZtuLmZA62E8phvtnMgY`](https://mempool.space/address/1HLHwz6yh5E38fdZtuLmZA62E8phvtnMgY) | [`765c6354fc28132d…:0`](https://mempool.space/tx/765c6354fc28132ddf0dbbc4508afa4839b0f25d1d971e906691d2b9dde2828b#vout=0) | 10,000 | 969220 |
-| P2 | [`1H6pNHy5Pagfc5VLaCfo6bnE6rXsYPdbB2`](https://mempool.space/address/1H6pNHy5Pagfc5VLaCfo6bnE6rXsYPdbB2) | [`ebd9e312cc711629…:0`](https://mempool.space/tx/ebd9e312cc7116292c2f289b7c4be7a23bbaa3d49abadad89c2a55627036c43e#vout=0) | 20,000 | 969216 |
+| # | Holder address | Output | Colored sats | Since block | Moved since |
+|---:|---|---|---:|---:|---|
+| P1 | [`1NjWmLj29j8ibgzNVsEBr6pc5bq6jSsjzV`](https://mempool.space/address/1NjWmLj29j8ibgzNVsEBr6pc5bq6jSsjzV) | [`ca2b7b61417ccf5b…:0`](https://mempool.space/tx/ca2b7b61417ccf5b1206a9bb5a162c7778c75095bd1c73ca9ed654657a05d067#vout=0) | 10,000 | 969218 |  |
+| P1 | [`1HLHwz6yh5E38fdZtuLmZA62E8phvtnMgY`](https://mempool.space/address/1HLHwz6yh5E38fdZtuLmZA62E8phvtnMgY) | [`765c6354fc28132d…:0`](https://mempool.space/tx/765c6354fc28132ddf0dbbc4508afa4839b0f25d1d971e906691d2b9dde2828b#vout=0) | 10,000 | 969220 |  |
+| P2 | [`1H6pNHy5Pagfc5VLaCfo6bnE6rXsYPdbB2`](https://mempool.space/address/1H6pNHy5Pagfc5VLaCfo6bnE6rXsYPdbB2) | [`ebd9e312cc711629…:0`](https://mempool.space/tx/ebd9e312cc7116292c2f289b7c4be7a23bbaa3d49abadad89c2a55627036c43e#vout=0) | 20,000 | 969216 |  |
 
 The test.js seed is public, so anyone can derive the keys of the original recipients; these holders are whoever spent the outputs, not necessarily anyone connected to the project.

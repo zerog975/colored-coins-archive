@@ -77,6 +77,20 @@ def _md_row(r: list) -> str:
             f"{burned:,} | {holders} | {meta_cell} |")
 
 
+def _holder_table(geneses: list[dict], prefix: str) -> list[str]:
+    out = ["| # | Holder address | Output | Colored sats | Since block | Moved since |",
+           "|---:|---|---|---:|---:|---|"]
+    for i, g in enumerate(geneses, 1):
+        for h in g["holdings"]:
+            addr = f"[`{h['address']}`](https://mempool.space/address/{h['address']})" if h.get("address") \
+                else "(no address)"
+            o = f"[`{h['txid'][:16]}…:{h['vout']}`](https://mempool.space/tx/{h['txid']}#vout={h['vout']})"
+            moved = f"[`{h['spent_after_census'][:16]}…`](https://mempool.space/tx/{h['spent_after_census']})" \
+                if h.get("spent_after_census") else ""
+            out.append(f"| {prefix}{i} | {addr} | {o} | {h['colored_sats']:,} | {h['block_height']} | {moved} |")
+    return out
+
+
 HEADER = [
     "| # | Block | Date (UTC) | Genesis transaction | Rules | Colored outputs | Issued | Held | Burned | Holders | Metadata |",
     "|---:|---:|---|---|---|---:|---:|---:|---:|---:|---|",
@@ -105,6 +119,18 @@ def render_md(data: dict, json_name: str, prerelease: dict | None = None) -> str
     ] + HEADER
     all_rows = rows(data, prerelease)
     lines += [_md_row(r) for r in all_rows if not str(r[0]).startswith("P")]
+    if any("address" in h for g in data["geneses"] for h in g["holdings"]):
+        ha = data["holder_addresses"]
+        lines += [
+            "",
+            "## Holders",
+            "",
+            f"Every output holding colored sats at the census, by address ({ha['holdings_named']} holdings; "
+            f"looked up on both explorers in workflow run {ha['workflow_run']}). *Moved since* links the "
+            f"transaction that has spent the output since the census ({ha['holdings_spent_after_census']} so far); "
+            "where the colored sats went from there is not traced here.",
+            "",
+        ] + _holder_table(data["geneses"], "")
     if prerelease:
         s = prerelease["summary"]
         lines += [
@@ -123,16 +149,7 @@ def render_md(data: dict, json_name: str, prerelease: dict | None = None) -> str
             "",
             "Current holders (the address of each unspent output now carrying the colored sats):",
             "",
-            "| # | Holder address | Output | Colored sats | Since block |",
-            "|---:|---|---|---:|---:|",
-        ]
-        for i, g in enumerate(prerelease["geneses"], 1):
-            for h in g["holdings"]:
-                addr = f"[`{h['address']}`](https://mempool.space/address/{h['address']})" if h.get("address") \
-                    else "(no address)"
-                out = f"[`{h['txid'][:16]}…:{h['vout']}`](https://mempool.space/tx/{h['txid']}#vout={h['vout']})"
-                lines.append(f"| P{i} | {addr} | {out} | {h['colored_sats']:,} | {h['block_height']} |")
-        lines += [
+        ] + _holder_table(prerelease["geneses"], "P") + [
             "",
             "The test.js seed is public, so anyone can derive the keys of the original recipients; these "
             "holders are whoever spent the outputs, not necessarily anyone connected to the project.",
