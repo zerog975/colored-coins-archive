@@ -1,0 +1,38 @@
+name: vbuterin 2013 census holder addresses
+
+# Read-only: looks up the address of every holding in the frozen mainnet
+# census on two explorers and prints the results to the job log.
+
+on:
+  push:
+    branches:
+      - claude/sharp-mccarthy-3evzom
+    paths:
+      - ".github/workflows/vbuterin-2013-holder-addresses.yml"
+      - "scripts/address_vbuterin_2013_holdings.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  addresses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - base_url: https://mempool.space
+            request_delay: 1.0
+          - base_url: https://blockstream.info
+            request_delay: 2.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Look up holder addresses
+        run: >-
+          python scripts/address_vbuterin_2013_holdings.py historical/census/vbuterin_2013_mainnet_v0.1.json
+          --base-url "${{ matrix.base_url }}" --request-delay "${{ matrix.request_delay }}"
