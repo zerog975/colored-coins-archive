@@ -183,7 +183,7 @@ The root-commit code cannot rebuild them exactly, so they are recorded apart fro
 - There is no change output. Each spends 100,000 sats and leaves the remainder to the miner (fees 40,000 and 50,000). Root-commit `mkgenesis` with node-sx `a7cc669` would charge 10,000 (both are under 1 KB unsigned) and add the change to output 0. The first 15 census issuances follow that rule exactly and are not funded from the `test.js` wallet.
 - `eef2faa6…` starts its metadata with 20 non-text bytes (`dd359ad6…502f`). They are not one of the first 200 keys on either chain of the `test.js` wallet, nor a plain hash of the text.
 
-Together they issued 40,000 sats; all of it is still held in 3 holdings, verified backwards by `find_genesis`. The `test.js` seed is public, so anyone can spend these outputs; their holders say nothing about who controls them. The views `vbuterin_2013_mainnet_v0.1.md` and `.csv` list them as P1 and P2.
+Together they issued 40,000 sats; all of it is still held in 3 holdings, verified backwards by `find_genesis`. The original outputs were spent at blocks 969216–969220, each whole into one output, so the holders are now `1NjWmLj29j8ibgzNVsEBr6pc5bq6jSsjzV` and `1HLHwz6yh5E38fdZtuLmZA62E8phvtnMgY` (10,000 sats each, from `eef2faa6…`) and `1H6pNHy5Pagfc5VLaCfo6bnE6rXsYPdbB2` (20,000 sats, from `65d423d4…`). None of them is among the first 1,000 keys on either chain of the `test.js` wallet. The `test.js` seed is public, so anyone could have made those spends; the holders show where the colored sats are, not who is connected to the project. The views `vbuterin_2013_mainnet_v0.1.md` and `.csv` list them as P1 and P2.
 
 ## Next steps
 

@@ -303,6 +303,7 @@ class PrereleaseRecordTests(unittest.TestCase):
         self.assertEqual(s["geneses_confirmed_by_all_services"], len(g))
         for x in g:
             self.assertFalse(x["truncated"])
+            self.assertTrue(all(h["address"] for h in x["holdings"]))
             self.assertEqual(sum(h["colored_sats"] for h in x["holdings"]), x["held_sats"])
 
     def test_rejected_by_the_census_on_date_only_and_not_counted(self):

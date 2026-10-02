@@ -14,15 +14,15 @@
  "sources": [
   {
    "service": "mempool.space",
-   "workflow_run": "36959456321",
+   "workflow_run": "36960079878",
    "check_sha256": "5f8e3939ca6582fbfd3f3eaef528579cdfad9e28c9d6eb5a0f5920c8a3524a95",
-   "trace_sha256": "5c3456f8a40a2492ee327ba9596ae72c19d0d2958aa2859384aa9d84fa2846b6"
+   "trace_sha256": "fe134c1bd477f68a86fb34d1d14182caf4c0f9954f68b7f726b7495a6eaa6782"
   },
   {
    "service": "blockstream.info",
-   "workflow_run": "36959456321",
+   "workflow_run": "36960079878",
    "check_sha256": "467425860b2079968fdfe3b3b97942cd7fba87cfa4ffbb7088db4ca1314e14e6",
-   "trace_sha256": "2f431b212acf78cde9d7b65ce67131622f4d2bd3e9990bfc8659daa70192d487"
+   "trace_sha256": "903bcbc9e665b8f8f0c1157da8b90d3927cbad0e7837b2c0f94067ee06a6e1a6"
   }
  ],
  "summary": {
@@ -61,6 +61,7 @@
    "truncated": false,
    "holdings": [
     {
+     "address": "1NjWmLj29j8ibgzNVsEBr6pc5bq6jSsjzV",
      "block_height": 969218,
      "colored_sats": 10000,
      "find_genesis_verified": true,
@@ -77,6 +78,7 @@
      "vout": 0
     },
     {
+     "address": "1HLHwz6yh5E38fdZtuLmZA62E8phvtnMgY",
      "block_height": 969220,
      "colored_sats": 10000,
      "find_genesis_verified": true,
@@ -177,6 +179,7 @@
    "truncated": false,
    "holdings": [
     {
+     "address": "1H6pNHy5Pagfc5VLaCfo6bnE6rXsYPdbB2",
      "block_height": 969216,
      "colored_sats": 20000,
      "find_genesis_verified": true,
