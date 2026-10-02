@@ -270,3 +270,41 @@ class DiscoveryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FrozenCensusTests(unittest.TestCase):
+    """Internal consistency of the frozen mainnet census record."""
+
+    def setUp(self):
+        import json
+
+        path = SCRIPT.parents[1] / "historical" / "census" / "vbuterin_2013_mainnet_v0.1.json"
+        self.data = json.loads(path.read_text(encoding="utf-8"))
+
+    def test_summary_matches_records(self):
+        d, s = self.data, self.data["summary"]
+        g = d["geneses"]
+        self.assertEqual(s["consistent_geneses"], len(g))
+        self.assertEqual(s["consistent_geneses"] + s["rejected"], s["candidates_assessed"])
+        self.assertEqual(s["issued_sats"], sum(x["issued_sats"] for x in g))
+        self.assertEqual(s["issued_sats"], s["held_sats"] + s["burned_to_fees_sats"])
+        self.assertEqual(s["holdings"], s["holdings_verified_by_find_genesis"])
+        self.assertEqual(s["assessment_disagreements"], 0)
+
+    def test_each_genesis_accounts_for_its_satoshis(self):
+        for g in self.data["geneses"]:
+            with self.subTest(genesis=g["txid"]):
+                held = sum(h["colored_sats"] for h in g["holdings"])
+                burned = sum(f["sats"] for f in g["fee_losses"])
+                self.assertEqual(held, g["held_sats"])
+                self.assertEqual(burned, g["burned_to_fees_sats"])
+                self.assertEqual(held + burned, g["issued_sats"])
+                self.assertIn(vb.RULESET_PROTOCOL_FIX if g["matching_rulesets"][-1].endswith("10-01")
+                              else vb.RULESET_ROOT, g["matching_rulesets"])
+
+    def test_issued_amounts_follow_the_genesis_layout(self):
+        # Protocol-fix geneses issue exactly 10000 sats per colored output.
+        for g in self.data["geneses"]:
+            if g["matching_rulesets"] == [vb.RULESET_PROTOCOL_FIX]:
+                with self.subTest(genesis=g["txid"]):
+                    self.assertEqual(g["issued_sats"], 10000 * len(g["colored_vouts"]))

@@ -20,7 +20,7 @@ Historical source code, specifications, transaction references, hashes, and arch
 | Ruleset | Kernel | Evidence | Chain state |
 |---|---|---|---|
 | killerstorm `cbtc`, September 2012 (whole-transaction coloring) | `indexer/protocols/cbtc_2012.py` | `docs/reconstruction/CBTC_2012_KERNEL.md` | testnet3 lineage reconstructed, census v0.1 frozen |
-| vbuterin/coloredcoins, Sept–Oct 2013 (marker address + vertical flow) | `indexer/protocols/vbuterin_2013.py` | `docs/reconstruction/VBUTERIN_2013_KERNEL.md` | source archived as a Git bundle; no chain census yet |
+| vbuterin/coloredcoins, Sept–Oct 2013 (marker address + vertical flow) | `indexer/protocols/vbuterin_2013.py` | `docs/reconstruction/VBUTERIN_2013_KERNEL.md` | source archived; mainnet census v0.1 frozen: 180 issuances (Oct 2013 – May 2014), cross-checked on two explorers |
 | Order-based weak coloring / ArmoryX, 2012 | — | `docs/provenance/ORDER_BASED_WEAK_COLORING_2012.md` | provenance only in `main` |
 
 All kernels are read-only. Nothing in this repository broadcasts or spends Bitcoin.

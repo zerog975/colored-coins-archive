@@ -1,6 +1,6 @@
 # Reconstruction kernel: 2013 `vbuterin/coloredcoins`
 
-Status: **IMPLEMENTED / TESTED / SOURCE ARCHIVED — NO CHAIN CENSUS YET**
+Status: **IMPLEMENTED / TESTED / SOURCE ARCHIVED / MAINNET CENSUS v0.1**
 
 This document defines the reconstruction kernel for Vitalik Buterin's September–October 2013 marker-address Colored Coins implementation. It re-expresses the historical rules as side-effect-free Python and records exactly where the historical code, as written, differs from its evident intent.
 
@@ -133,9 +133,46 @@ This kernel must not be applied to killerstorm's 2012 `cbtc` whole-transaction c
 
 Caps on pages and followed transactions are reported in the output (`status: incomplete`), never applied silently. The workflow `.github/workflows/vbuterin-2013-census.yml` runs the census on mainnet and testnet3 against two independent Esplora services.
 
+## Mainnet census v0.1
+
+Frozen record: `historical/census/vbuterin_2013_mainnet_v0.1.json` (built by `scripts/freeze_vbuterin_2013_census.py` from workflow run 36930765700; result SHA-256s inside).
+
+**Candidates.** Bitcoin Core `scantxoutset` on a mainnet node listed every unspent output paying the marker script; 622 outputs (621 transactions) between heights 258000 and 340000 were kept (`historical/census/inputs/vbuterin_2013_mainnet_scantxoutset.json`). Because marker outputs cannot be spent, this is every marker output ever created in that range.
+
+**Result.**
+
+| | |
+|---|---|
+| candidates assessed | 621 |
+| consistent with a genesis layout | 180 (rejected 441: mostly 548/1000/5500-sat burn-address dust) |
+| ruleset matched | 2013-10-01 only: 168; both: 8; 2013-09-27 only: 4 |
+| fee | 10000 sats in all 180 |
+| issued | 4,380,000 sats in colored outputs |
+| still held | 4,249,662 sats in 403 holdings (301 never left the genesis output) |
+| paid to fees | 130,338 sats |
+| holders verified backwards by `find_genesis` | 403 / 403 |
+| first genesis | `2cc7818b…` block 261073, 2013-10-01 09:53:23 UTC |
+| last genesis | `ebba9c92…` block 303492, 2014-05-31 15:38:58 UTC |
+
+**Independent cross-check.** mempool.space and blockstream.info were queried separately. All 620 candidates assessed by both received identical verdicts, and all 175 lineages blockstream.info could finish are identical to mempool.space down to every holder's satoshi ranges. Five geneses rest on mempool.space alone because blockstream.info rate-limited those lookups (`geneses_single_source` in the record).
+
+**Why these are attributed to this implementation.**
+
+- The two earliest geneses (block 261073) were mined 2013-10-01 09:53 UTC, about 3 h 20 min *before* the protocol-fix commit `debeddc` (13:13 UTC), and match only the 2013-09-27 layout (change merged into the first colored output). Later geneses switch to the 2013-10-01 layout.
+- Metadata uses the 20-byte pseudo-address encoding and reads as application and test data: `hash=3&short=Artwork&long=<sha256>`, `My First Artwork`, `SirBobalot`, keyboard tests (`asdfg`, `wertqwer`), and, from block ~262500, binary records sharing fixed prefixes (one application stamping its own identifiers).
+- Every genesis pays exactly the tool's 10000-sat fee.
+
+**Caveats.**
+
+- `2717a4bd…` (block 275100) has no metadata and one colored output; any plain two-output payment of 10000 sats to the marker with a 10000-sat fee has that shape. It is flagged unconfirmed.
+- "Consistent" means made with this marker protocol. Some issuances may come from software built on it (for example a web front end) rather than the exact surviving code; the binary-metadata issuances in particular point to an application layer whose source is not archived here.
+- Testnet3 has not been censused; its marker-address history is too large to page from public explorers (`scantxoutset` on a testnet3 node is the route).
+- Offsets are read as 0-based (an interpretation); see defect 12.
+
 ## Next steps
 
-1. Run the census workflow and compare the two services' results; record verified candidates under `historical/candidates/` and freeze the census under `historical/census/`.
-2. If address paging is refused or too slow for the burn address, run `scantxoutset` on a Bitcoin Core node and pass the result with `--candidates-file`.
+1. Census testnet3 from a `scantxoutset` candidate list.
+2. Re-run blockstream.info for the five single-source geneses to complete the independent cross-check.
+3. Identify the application behind the binary-metadata issuances (shared metadata prefixes, funding addresses).
 3. Build a Node.js reproduction environment (node-sx at the assumed revisions, a 2013 `sx`) to confirm the as-executed behavior end to end.
 4. Add an independent archival reference (e.g. Software Heritage) for the bundle.

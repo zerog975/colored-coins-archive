@@ -24,7 +24,7 @@ Status markers: **[done]**, **[in progress]**, **[open]**.
 ## Phase 2 — Modern indexer
 
 - **[in progress]** Connect to a Bitcoin data source (read-only Esplora adapter done; Bitcoin Core adapter open).
-- **[in progress]** Scan historical Bitcoin blocks and transactions (`cbtc` 2012 testnet3 census v0.1 done).
+- **[in progress]** Scan historical Bitcoin blocks and transactions (`cbtc` 2012 testnet3 census v0.1 and vbuterin 2013 mainnet census v0.1 done; vbuterin 2013 testnet3 open).
 - **[in progress]** Implement the selected historical coloring rules without changing their semantics.
   - **[done]** `cbtc` 2012 kernel, no semantic change.
   - **[done, with documented deviations]** vbuterin 2013 kernel. The as-written tracing code cannot run, so the kernel implements the intended vertical-flow and genesis-search rules; every deviation is listed in `docs/COMPATIBILITY.md`, and `historical_parent_helper_as_executed` reproduces the observed lookup. Forward tracing (`find_current_owner`) is deliberately not reconstructed because no unambiguous intent can be recovered.
