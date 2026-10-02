@@ -201,10 +201,68 @@ class Holding:
     segments: tuple[Segment, ...]
     block_height: int | None
     verified: bool | None  # find_genesis cross-check of each segment's first satoshi
+    address: str | None = None  # present-day address of the output (the holder), when it has one
 
     @property
     def colored_sats(self) -> int:
         return sum(s.size for s in self.segments)
+
+
+_BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+
+
+def _bech32_encode(hrp: str, witver: int, program: bytes) -> str:
+    """BIP 173 (version 0) / BIP 350 (version 1+) segwit address."""
+
+    def polymod(values):
+        gen = (0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)
+        chk = 1
+        for v in values:
+            top = chk >> 25
+            chk = (chk & 0x1FFFFFF) << 5 ^ v
+            for i in range(5):
+                chk ^= gen[i] if (top >> i) & 1 else 0
+        return chk
+
+    acc = bits = 0
+    data = [witver]
+    for b in program:
+        acc = (acc << 8) | b
+        bits += 8
+        while bits >= 5:
+            bits -= 5
+            data.append((acc >> bits) & 31)
+    if bits:
+        data.append((acc << (5 - bits)) & 31)
+    const = 1 if witver == 0 else 0x2BC830A3
+    hrp_exp = [ord(c) >> 5 for c in hrp] + [0] + [ord(c) & 31 for c in hrp]
+    mod = polymod(hrp_exp + data + [0] * 6) ^ const
+    checksum = [(mod >> 5 * (5 - i)) & 31 for i in range(6)]
+    return hrp + "1" + "".join(_BECH32_CHARSET[d] for d in data + checksum)
+
+
+def output_address(script_pubkey_hex: str, *, testnet: bool = False) -> str | None:
+    """Present-day address of an output script, for naming holders.
+
+    Legacy forms follow ``historical_address_hash`` (a P2PK output is named by
+    the P2PKH address of its key); segwit v0 and taproot outputs get their
+    bech32/bech32m address. Other scripts have no address.
+    """
+
+    legacy = vb.historical_address_hash(script_pubkey_hex)
+    if legacy is not None:
+        version, hash_ = legacy
+        if testnet:
+            version = 0x6F if version == vb.ADDRESS_VERSION_PUBKEY_HASH else 0xC4
+        return vb.base58check_encode(hash_, version)
+    script = bytes.fromhex(script_pubkey_hex.strip())
+    if len(script) >= 4 and (script[0] == 0 or 0x51 <= script[0] <= 0x60) and script[1] == len(script) - 2 \
+            and 2 <= script[1] <= 40:
+        witver = 0 if script[0] == 0 else script[0] - 0x50
+        if witver == 0 and script[1] not in (20, 32):
+            return None
+        return _bech32_encode("tb" if testnet else "bc", witver, script[2:])
+    return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -315,6 +373,9 @@ class Vbuterin2013Census:
         heights = {genesis_txid: genesis.block_height}
         order = {genesis_txid: genesis.historical_sort_key()}
         values = {genesis_txid: [o.value_sats for o in genesis.outputs]}
+        scripts = {genesis_txid: [o.script_pubkey_hex for o in genesis.outputs]}
+        testnet = "test" in getattr(self.source, "network_label", "").lower()
+        address = lambda t, v: output_address(scripts[t][v], testnet=testnet)  # noqa: E731
         visited: set[str] = set()
 
         while frontier:
@@ -326,13 +387,14 @@ class Vbuterin2013Census:
             if spender_id is None:
                 result.holdings.append(
                     Holding(txid, vout, values[txid][vout], tuple(segments), heights.get(txid),
-                            self._verify(txid, vout, segments))
+                            self._verify(txid, vout, segments), address(txid, vout))
                 )
                 continue
             if spender_id not in visited and len(visited) >= self.max_transactions:
                 result.truncated = True
                 result.holdings.append(
-                    Holding(txid, vout, values[txid][vout], tuple(segments), heights.get(txid), None)
+                    Holding(txid, vout, values[txid][vout], tuple(segments), heights.get(txid), None,
+                            address(txid, vout))
                 )
                 continue
             spender = self._tx(spender_id)
@@ -343,6 +405,7 @@ class Vbuterin2013Census:
             heights[spender_id] = spender.block_height
             order[spender_id] = spender.historical_sort_key()
             values[spender_id] = [o.value_sats for o in spender.outputs]
+            scripts[spender_id] = [o.script_pubkey_hex for o in spender.outputs]
 
             base = 0
             input_index = None
@@ -372,6 +435,6 @@ class Vbuterin2013Census:
             else:
                 verified = None if None in (prev.verified, h.verified) else prev.verified and h.verified
                 merged[(h.txid, h.vout)] = Holding(h.txid, h.vout, h.value_sats, prev.segments + h.segments,
-                                                   h.block_height, verified)
+                                                   h.block_height, verified, h.address)
         result.holdings = sorted(merged.values(), key=lambda h: (order.get(h.txid, (0, 0, "")), h.vout))
         return result

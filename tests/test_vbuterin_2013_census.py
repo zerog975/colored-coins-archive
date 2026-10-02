@@ -14,6 +14,7 @@ from indexer.vbuterin_2013_census import (
     assess_genesis_candidate,
     map_segments_through,
     metadata_text,
+    output_address,
 )
 
 
@@ -266,6 +267,21 @@ class DiscoveryTests(unittest.TestCase):
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
             json.dump({"unspents": [{"txid": G, "vout": 2, "height": 260000}]}, fh)
         self.assertEqual(self.script.load_candidate_txids(Path(fh.name)), [G])
+
+
+class OutputAddressTests(unittest.TestCase):
+    def test_legacy_and_segwit_forms(self):
+        self.assertEqual(output_address("76a914" + "00" * 20 + "88ac"), "1111111111111111111114oLvT2")
+        self.assertEqual(output_address("a914" + "00" * 20 + "87"), "31h1vYVSYuKP6AhS86fbRdMw9XHieotbST")
+        # BIP 173 and BIP 86 vectors
+        self.assertEqual(output_address("0014751e76e8199196d454941c45d1b3a323f1433bd6"),
+                         "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4")
+        self.assertEqual(output_address("0014751e76e8199196d454941c45d1b3a323f1433bd6", testnet=True),
+                         "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx")
+        self.assertEqual(
+            output_address("5120a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c"),
+            "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr")
+        self.assertIsNone(output_address("6a00"))
 
 
 class PrereleaseRecordTests(unittest.TestCase):

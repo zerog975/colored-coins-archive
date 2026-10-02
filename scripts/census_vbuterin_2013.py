@@ -202,7 +202,7 @@ def lineage_json(r: LineageResult) -> dict:
         "missing_transactions": sorted(set(r.missing)),
         "holdings": [
             {
-                "txid": h.txid, "vout": h.vout, "value_sats": h.value_sats,
+                "txid": h.txid, "vout": h.vout, "address": h.address, "value_sats": h.value_sats,
                 "colored_sats": h.colored_sats, "block_height": h.block_height,
                 "find_genesis_verified": h.verified,
                 "segments": [
