@@ -1,0 +1,32 @@
+name: vbuterin 2013 pre-root transaction check
+
+# Read-only: compares the two marker transactions confirmed before the root
+# commit with the root-commit fee rule and the test.js wallet. Results are
+# printed to the job log.
+
+on:
+  push:
+    branches:
+      - claude/sharp-mccarthy-3evzom
+    paths:
+      - ".github/workflows/vbuterin-2013-prerelease-check.yml"
+      - "scripts/check_vbuterin_2013_prerelease.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        base_url: [https://mempool.space, https://blockstream.info]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check
+        run: python scripts/check_vbuterin_2013_prerelease.py --base-url "${{ matrix.base_url }}" --request-delay 2
