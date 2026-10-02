@@ -5,6 +5,11 @@ name: Export census artifacts to log
 # GitHub's artifact storage. Read-only.
 
 on:
+  push:
+    branches:
+      - claude/sharp-mccarthy-3evzom
+    paths:
+      - ".github/workflows/export-census-artifacts.yml"
   workflow_dispatch:
     inputs:
       run_id:
@@ -21,7 +26,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          run-id: ${{ inputs.run_id }}
+          run-id: ${{ inputs.run_id || '36930765700' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: vbuterin-2013-census-*
           path: artifacts
