@@ -7,7 +7,7 @@ eef2faa6 and 65d423d4 were made from the test.js wallet before the root commit
 (see scripts/check_vbuterin_2013_prerelease.py). The census rejects them on
 date, so this traces them separately: colored outputs are the outputs before
 the marker, and transfers follow the same vertical-flow rule as the census.
-Read-only; prints JSON.
+Each holding names its present-day address. Read-only; prints JSON.
 """
 
 from __future__ import annotations
