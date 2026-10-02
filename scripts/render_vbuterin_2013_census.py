@@ -78,16 +78,24 @@ def _md_row(r: list) -> str:
 
 
 def _holder_table(geneses: list[dict], prefix: str) -> list[str]:
-    out = ["| # | Holder address | Output | Colored sats | Since block | Moved since |",
+    markers = {g["txid"]: g["marker_index"] for g in geneses}
+    out = ["| # | Holder address | Output | Colored sats | Since block | Note |",
            "|---:|---|---|---:|---:|---|"]
     for i, g in enumerate(geneses, 1):
         for h in g["holdings"]:
             addr = f"[`{h['address']}`](https://mempool.space/address/{h['address']})" if h.get("address") \
                 else "(no address)"
             o = f"[`{h['txid'][:16]}…:{h['vout']}`](https://mempool.space/tx/{h['txid']}#vout={h['vout']})"
-            moved = f"[`{h['spent_after_census'][:16]}…`](https://mempool.space/tx/{h['spent_after_census']})" \
-                if h.get("spent_after_census") else ""
-            out.append(f"| {prefix}{i} | {addr} | {o} | {h['colored_sats']:,} | {h['block_height']} | {moved} |")
+            note = ""
+            m = markers.get(h["txid"])
+            if m is not None and h["vout"] == m:
+                note = "marker output: unspendable"
+            elif m is not None and h["vout"] > m:
+                note = "metadata output: no known key"
+            if h.get("spent_after_census"):
+                sp = h["spent_after_census"]
+                note += ("; " if note else "") + f"moved since census: [`{sp[:16]}…`](https://mempool.space/tx/{sp})"
+            out.append(f"| {prefix}{i} | {addr} | {o} | {h['colored_sats']:,} | {h['block_height']} | {note} |")
     return out
 
 
@@ -126,9 +134,10 @@ def render_md(data: dict, json_name: str, prerelease: dict | None = None) -> str
             "## Holders",
             "",
             f"Every output holding colored sats at the census, by address ({ha['holdings_named']} holdings; "
-            f"looked up on both explorers in workflow run {ha['workflow_run']}). *Moved since* links the "
-            f"transaction that has spent the output since the census ({ha['holdings_spent_after_census']} so far); "
-            "where the colored sats went from there is not traced here.",
+            f"looked up on both explorers in workflow run {ha['workflow_run']}). Where colored coins funded a "
+            "later genesis, vertical flow carries some of them into its marker or metadata outputs; the *Note* "
+            "column marks those, since nobody can spend them. It also links any transaction that has spent a "
+            f"holding since the census ({ha['holdings_spent_after_census']} so far; not traced further).",
             "",
         ] + _holder_table(data["geneses"], "")
     if prerelease:

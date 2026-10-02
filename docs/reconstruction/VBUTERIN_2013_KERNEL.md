@@ -135,7 +135,7 @@ Caps on pages and followed transactions are reported in the output (`status: inc
 
 ## Mainnet census v0.1
 
-Frozen record: `historical/census/vbuterin_2013_mainnet_v0.1.json` (built by `scripts/freeze_vbuterin_2013_census.py` from workflow run 36930765700; result SHA-256s inside).
+Frozen record: `historical/census/vbuterin_2013_mainnet_v0.1.json` (built by `scripts/freeze_vbuterin_2013_census.py` from workflow run 36930765700, then holder addresses added by `scripts/add_vbuterin_2013_holder_addresses.py`; result SHA-256s inside).
 
 **Candidates.** Bitcoin Core `scantxoutset` on a mainnet node listed every unspent output paying the marker script; 622 outputs (621 transactions) between heights 258000 and 340000 were kept (`historical/census/inputs/vbuterin_2013_mainnet_scantxoutset.json`). Because marker outputs cannot be spent, this is every marker output ever created in that range.
 
@@ -153,6 +153,8 @@ Frozen record: `historical/census/vbuterin_2013_mainnet_v0.1.json` (built by `sc
 | holders verified backwards by `find_genesis` | 403 / 403 |
 | first genesis | `2cc7818b…` block 261073, 2013-10-01 09:53:23 UTC |
 | last genesis | `ebba9c92…` block 303492, 2014-05-31 15:38:58 UTC |
+
+**Holders.** Each holding carries its address and `spent_after_census` (workflow run 36960484510, `scripts/add_vbuterin_2013_holder_addresses.py`; both explorers agreed on all 403). The 403 holdings sit at 191 distinct addresses, and none had been spent since the census when they were looked up. Six holdings (60,000 sats) are the marker output or metadata outputs of a later genesis. That genesis was funded with colored coins, and vertical flow carried part of them there; nobody can spend those outputs. The Markdown view lists every holder.
 
 **Independent cross-check.** mempool.space and blockstream.info were queried separately. All 620 candidates assessed by both received identical verdicts, and all 175 lineages blockstream.info could finish are identical to mempool.space down to every holder's satoshi ranges. Five geneses rest on mempool.space alone because blockstream.info rate-limited those lookups (`geneses_single_source` in the record).
 

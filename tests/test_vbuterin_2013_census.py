@@ -363,6 +363,13 @@ class FrozenCensusTests(unittest.TestCase):
         self.assertEqual(s["holdings"], s["holdings_verified_by_find_genesis"])
         self.assertEqual(s["assessment_disagreements"], 0)
 
+    def test_every_holding_is_named(self):
+        ha = self.data["holder_addresses"]
+        holdings = [h for g in self.data["geneses"] for h in g["holdings"]]
+        self.assertEqual(ha["holdings_named"], len(holdings))
+        self.assertEqual((ha["disagreements"], ha["unresolved"]), ([], []))
+        self.assertTrue(all(h["address"] for h in holdings))
+
     def test_each_genesis_accounts_for_its_satoshis(self):
         for g in self.data["geneses"]:
             with self.subTest(genesis=g["txid"]):
