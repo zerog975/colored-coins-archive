@@ -1,8 +1,8 @@
 name: vbuterin 2013 pre-root transaction check
 
 # Read-only: compares the two marker transactions confirmed before the root
-# commit with the root-commit fee rule and the test.js wallet. Results are
-# printed to the job log.
+# commit with the root-commit fee rule and the test.js wallet, and traces
+# their holders. Results are printed to the job log.
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
     paths:
       - ".github/workflows/vbuterin-2013-prerelease-check.yml"
       - "scripts/check_vbuterin_2013_prerelease.py"
+      - "scripts/trace_vbuterin_2013_prerelease.py"
   workflow_dispatch:
 
 permissions:
@@ -30,3 +31,5 @@ jobs:
           python-version: "3.12"
       - name: Check
         run: python scripts/check_vbuterin_2013_prerelease.py --base-url "${{ matrix.base_url }}" --request-delay 2
+      - name: Trace holders
+        run: python scripts/trace_vbuterin_2013_prerelease.py --base-url "${{ matrix.base_url }}" --request-delay 2
