@@ -199,3 +199,13 @@ Not counted above. From [`vbuterin_2013_mainnet_prerelease.json`](vbuterin_2013_
 |---:|---:|---|---|---|---:|---:|---:|---:|---:|---|
 | P1 | 259632 | 2013-09-23 12:54 | [`eef2faa6540b37f5…`](https://mempool.space/tx/eef2faa6540b37f5075458a9c435614cb043ac545af95add18cb76c083f0e03d) | pre-release | 2 | 20,000 | 20,000 | 0 | 2 | `.5.....^J.....!8K.P/All your base are belong 2 UNCLESAM` |
 | P2 | 259882 | 2013-09-24 18:20 | [`65d423d4eff6b5c7…`](https://mempool.space/tx/65d423d4eff6b5c737eed3b711f7c606e79d827b2a0d2936ffbd07ecfbac77d4) | pre-release | 1 | 20,000 | 20,000 | 0 | 1 | `All your base are belong to yourself` |
+
+Current holders (the address of each unspent output now carrying the colored sats):
+
+| # | Holder address | Output | Colored sats | Since block |
+|---:|---|---|---:|---:|
+| P1 | (no address) | [`ca2b7b61417ccf5b…:0`](https://mempool.space/tx/ca2b7b61417ccf5b1206a9bb5a162c7778c75095bd1c73ca9ed654657a05d067#vout=0) | 10,000 | 969218 |
+| P1 | (no address) | [`765c6354fc28132d…:0`](https://mempool.space/tx/765c6354fc28132ddf0dbbc4508afa4839b0f25d1d971e906691d2b9dde2828b#vout=0) | 10,000 | 969220 |
+| P2 | (no address) | [`ebd9e312cc711629…:0`](https://mempool.space/tx/ebd9e312cc7116292c2f289b7c4be7a23bbaa3d49abadad89c2a55627036c43e#vout=0) | 20,000 | 969216 |
+
+The test.js seed is public, so anyone can derive the keys of the original recipients; these holders are whoever spent the outputs, not necessarily anyone connected to the project.

@@ -21,11 +21,18 @@ from pathlib import Path
 
 PRERELEASE = "vbuterin_2013_mainnet_prerelease.json"
 COLUMNS = ["#", "block_height", "date_utc", "genesis_txid", "rules", "colored_outputs", "issued_sats",
-           "held_sats", "burned_sats", "holders", "confirmed_by", "flags", "metadata"]
+           "held_sats", "burned_sats", "holders", "confirmed_by", "flags", "metadata", "holder_addresses"]
 
 
 def _printable(raw: bytes) -> str:
     return "".join(chr(b) if 32 <= b < 127 else "." for b in raw.rstrip(b"\x00"))
+
+
+def _addresses(genesis: dict) -> str:
+    """Distinct holder addresses in holding order; empty when the record predates them."""
+
+    seen = dict.fromkeys(h["address"] for h in genesis["holdings"] if h.get("address"))
+    return " ".join(seen)
 
 
 def rows(data: dict, prerelease: dict | None = None) -> list[list]:
@@ -37,13 +44,13 @@ def rows(data: dict, prerelease: dict | None = None) -> list[list]:
         date = datetime.datetime.fromtimestamp(g["block_time"], datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")
         out.append([i, g["block_height"], date, g["txid"], rules, len(g["colored_vouts"]), g["issued_sats"],
                     g["held_sats"], g["burned_to_fees_sats"], len(g["holdings"]), " & ".join(g["confirmed_by"]),
-                    "; ".join(g["flags"]), printable[:60]])
+                    "; ".join(g["flags"]), printable[:60], _addresses(g)])
     for i, g in enumerate((prerelease or {}).get("geneses", []), 1):
         date = datetime.datetime.fromtimestamp(g["block_time"], datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")
         out.append([f"P{i}", g["block_height"], date, g["txid"], "pre-release", len(g["colored_vouts"]),
                     g["issued_sats"], g["held_sats"], g["burned_to_fees_sats"], len(g["holdings"]),
                     " & ".join(g["confirmed_by"]), "made before the root commit with the test.js wallet",
-                    _printable(bytes.fromhex(g["metadata_hex"] or ""))[:60]])
+                    _printable(bytes.fromhex(g["metadata_hex"] or ""))[:60], _addresses(g)])
     return out
 
 
@@ -62,7 +69,7 @@ def _code_cell(text: str) -> str:
 
 
 def _md_row(r: list) -> str:
-    n, height, date, txid, rules, colored, issued, held, burned, holders, confirmed, flags, meta = r
+    n, height, date, txid, rules, colored, issued, held, burned, holders, confirmed, flags, meta, _ = r
     mark = "" if str(n).startswith("P") else ("" if " & " in confirmed else " ¹") + (" ⚠" if flags else "")
     link = f"[`{txid[:16]}…`](https://mempool.space/tx/{txid}){mark}"
     meta_cell = f"`{_code_cell(meta)}`" if meta else ""
@@ -112,6 +119,24 @@ def render_md(data: dict, json_name: str, prerelease: dict | None = None) -> str
             f"{s['held_sats']:,} sats in {s['holdings']} holdings; {s['burned_to_fees_sats']:,} sats paid to fees.",
             "",
         ] + HEADER + [_md_row(r) for r in all_rows if str(r[0]).startswith("P")]
+        lines += [
+            "",
+            "Current holders (the address of each unspent output now carrying the colored sats):",
+            "",
+            "| # | Holder address | Output | Colored sats | Since block |",
+            "|---:|---|---|---:|---:|",
+        ]
+        for i, g in enumerate(prerelease["geneses"], 1):
+            for h in g["holdings"]:
+                addr = f"[`{h['address']}`](https://mempool.space/address/{h['address']})" if h.get("address") \
+                    else "(no address)"
+                out = f"[`{h['txid'][:16]}…:{h['vout']}`](https://mempool.space/tx/{h['txid']}#vout={h['vout']})"
+                lines.append(f"| P{i} | {addr} | {out} | {h['colored_sats']:,} | {h['block_height']} |")
+        lines += [
+            "",
+            "The test.js seed is public, so anyone can derive the keys of the original recipients; these "
+            "holders are whoever spent the outputs, not necessarily anyone connected to the project.",
+        ]
     lines.append("")
     return "\n".join(lines)
 
