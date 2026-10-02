@@ -126,6 +126,10 @@ def main() -> int:
             "test.js wallet key (first 200 keys, both chains) or a plain hash of the text. Root-commit mkgenesis "
             "only cuts chunks from the metadata string.",
         ],
+        "caveats": [
+            "The test.js seed is public in the archived source, so anyone can derive these keys and spend these "
+            "outputs; later holders say nothing about who controls them.",
+        ],
         "method": (
             "Colored outputs are the outputs before the marker, as in every revision; holders are traced with the "
             "census tracer (vertical flow, 0-based half-open satoshi ranges) and cross-checked backwards with "

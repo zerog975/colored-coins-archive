@@ -268,6 +268,61 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(self.script.load_candidate_txids(Path(fh.name)), [G])
 
 
+class PrereleaseRecordTests(unittest.TestCase):
+    """The pre-root-commit test issuances are recorded apart from the census."""
+
+    def setUp(self):
+        import json
+
+        census = SCRIPT.parents[1] / "historical" / "census"
+        self.pre = json.loads((census / "vbuterin_2013_mainnet_prerelease.json").read_text(encoding="utf-8"))
+        self.census = json.loads((census / "vbuterin_2013_mainnet_v0.1.json").read_text(encoding="utf-8"))
+
+    def test_summary_matches_records(self):
+        s, g = self.pre["summary"], self.pre["geneses"]
+        self.assertEqual(s["geneses"], len(g))
+        self.assertEqual(s["issued_sats"], sum(x["issued_sats"] for x in g))
+        self.assertEqual(s["issued_sats"], s["held_sats"] + s["burned_to_fees_sats"])
+        self.assertEqual(s["holdings"], s["holdings_verified_by_find_genesis"])
+        self.assertEqual(s["geneses_confirmed_by_all_services"], len(g))
+        for x in g:
+            self.assertFalse(x["truncated"])
+            self.assertEqual(sum(h["colored_sats"] for h in x["holdings"]), x["held_sats"])
+
+    def test_rejected_by_the_census_on_date_only_and_not_counted(self):
+        rejected = {r["txid"]: r["reason"] for r in self.census["rejected"]}
+        counted = {x["txid"] for x in self.census["geneses"]}
+        for x in self.pre["geneses"]:
+            with self.subTest(txid=x["txid"]):
+                self.assertNotIn(x["txid"], counted)
+                self.assertEqual(rejected[x["txid"]], "confirmed before the root commit")
+                self.assertEqual(x["census_checks"][vb.RULESET_ROOT], ["confirmed before the root commit"])
+
+    def test_funded_from_the_test_js_wallet(self):
+        for x in self.pre["geneses"]:
+            with self.subTest(txid=x["txid"]):
+                ev = x["evidence"]
+                self.assertTrue(all(i["test_js_wallet"] == "key 0 (chain 0, uncompressed)"
+                                    for i in ev["funding_inputs"]))
+                for v in x["colored_vouts"]:
+                    self.assertIsNotNone(ev["outputs"][v]["test_js_wallet"])
+                self.assertEqual(ev["fee_sats"], sum(i["value_sats"] for i in ev["funding_inputs"])
+                                 - sum(o["value_sats"] for o in ev["outputs"]))
+                self.assertNotEqual(ev["fee_sats"], ev["root_commit_fee_rule_sats"])
+
+    def test_test_js_wallet_derivation(self):
+        spec = importlib.util.spec_from_file_location(
+            "check_prerelease", SCRIPT.parent / "check_vbuterin_2013_prerelease.py")
+        check = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(check)
+        keys = check.electrum_v1_keys(check.TEST_JS_SEED, 11, 0)
+        addr = [vb.base58check_encode(vb.hash160(check.pubkeys(k)["uncompressed"]), 0) for k in keys]
+        self.assertEqual(addr[0], "12LMM34ht4MqxeHgNjsPjZ3wdYcfWzHnBD")
+        self.assertEqual(addr[1], "1KSwy4aQURZLG6oCGCJg4PpeMuA9oC33iJ")
+        self.assertEqual(addr[2], "15Xx6UmNvV11Ckewdv8rw2jE1hWLhdhtgJ")
+        self.assertEqual(addr[10], "1Co2unjWf7NnJeFobe5B5DAWW19HGzwFa2")
+
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -310,12 +365,15 @@ class FrozenCensusTests(unittest.TestCase):
                     self.assertEqual(g["issued_sats"], 10000 * len(g["colored_vouts"]))
 
     def test_rendered_views_are_up_to_date(self):
+        import json
+
         spec = importlib.util.spec_from_file_location(
             "render_census", SCRIPT.parent / "render_vbuterin_2013_census.py")
         render = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(render)
         census = SCRIPT.parents[1] / "historical" / "census"
         stem = "vbuterin_2013_mainnet_v0.1"
-        self.assertEqual((census / f"{stem}.csv").read_text(encoding="utf-8"), render.render_csv(self.data))
+        pre = json.loads((census / render.PRERELEASE).read_text(encoding="utf-8"))
+        self.assertEqual((census / f"{stem}.csv").read_text(encoding="utf-8"), render.render_csv(self.data, pre))
         self.assertEqual((census / f"{stem}.md").read_text(encoding="utf-8"),
-                         render.render_md(self.data, f"{stem}.json"))
+                         render.render_md(self.data, f"{stem}.json", pre))

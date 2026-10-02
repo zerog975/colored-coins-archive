@@ -169,10 +169,27 @@ Frozen record: `historical/census/vbuterin_2013_mainnet_v0.1.json` (built by `sc
 - Testnet3 has not been censused; its marker-address history is too large to page from public explorers (`scantxoutset` on a testnet3 node is the route).
 - Offsets are read as 0-based (an interpretation); see defect 12.
 
+## Pre-release test issuances
+
+Record: `historical/census/vbuterin_2013_mainnet_prerelease.json` (built by `scripts/freeze_vbuterin_2013_prerelease.py` from workflow run 36959456321; evidence from `scripts/check_vbuterin_2013_prerelease.py`, holders from `scripts/trace_vbuterin_2013_prerelease.py`). Both explorers returned identical data.
+
+The census rejects two marker transactions only because they were confirmed before the root commit: `eef2faa6…` (block 259632, 2013-09-23) and `65d423d4…` (block 259882, 2013-09-24). Both are Vitalik Buterin's own tests of this project:
+
+- `test.js` (root commit) hard-codes the wallet seed `c356f24f29a795b51a03dc2e30304db0` and derives keys with node-sx `genpriv` (Electrum 1.x). Key 0 of that wallet funds both transactions; their colored outputs pay keys 1 and 2 (`eef2faa6…`) and key 10 (`65d423d4…`).
+- The layout is the same as in every revision: colored outputs, the marker, 20-byte metadata chunks ("All your base are belong 2 UNCLESAM", "All your base are belong to yourself").
+
+The root-commit code cannot rebuild them exactly, so they are recorded apart from the 180 census issuances and not counted in its totals:
+
+- There is no change output. Each spends 100,000 sats and leaves the remainder to the miner (fees 40,000 and 50,000). Root-commit `mkgenesis` with node-sx `a7cc669` would charge 10,000 (both are under 1 KB unsigned) and add the change to output 0. The first 15 census issuances follow that rule exactly and are not funded from the `test.js` wallet.
+- `eef2faa6…` starts its metadata with 20 non-text bytes (`dd359ad6…502f`). They are not one of the first 200 keys on either chain of the `test.js` wallet, nor a plain hash of the text.
+
+Together they issued 40,000 sats; all of it is still held in 3 holdings, verified backwards by `find_genesis`. The `test.js` seed is public, so anyone can spend these outputs; their holders say nothing about who controls them. The views `vbuterin_2013_mainnet_v0.1.md` and `.csv` list them as P1 and P2.
+
 ## Next steps
 
 1. Census testnet3 from a `scantxoutset` candidate list.
 2. Re-run blockstream.info for the five single-source geneses to complete the independent cross-check.
 3. Identify the application behind the binary-metadata issuances (shared metadata prefixes, funding addresses).
-3. Build a Node.js reproduction environment (node-sx at the assumed revisions, a 2013 `sx`) to confirm the as-executed behavior end to end.
-4. Add an independent archival reference (e.g. Software Heritage) for the bundle.
+4. Identify the 20-byte metadata prefix of the pre-release issuance `eef2faa6…`.
+5. Build a Node.js reproduction environment (node-sx at the assumed revisions, a 2013 `sx`) to confirm the as-executed behavior end to end.
+6. Add an independent archival reference (e.g. Software Heritage) for the bundle.

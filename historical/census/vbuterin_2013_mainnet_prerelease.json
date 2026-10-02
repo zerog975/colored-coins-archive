@@ -1,0 +1,239 @@
+{
+ "census_id": "vbuterin-coloredcoins-2013-mainnet-prerelease-v0.1",
+ "network": "bitcoin-mainnet",
+ "relation_to_census": "Not part of vbuterin-coloredcoins-2013-mainnet-v0.1, which rejects both transactions as confirmed before the root commit (aa2bc9f, 2013-09-27 22:09:50 UTC). Recorded separately as Vitalik Buterin's own test issuances made while developing the same project.",
+ "attribution": "Both transactions are funded by key 0 of the wallet test.js derives from its hard-coded seed (c356f24f29a795b51a03dc2e30304db0, root commit aa2bc9f) via node-sx genpriv (Electrum 1.x derivation), and pay their colored outputs to keys 1, 2 and 10 of that wallet.",
+ "differences_from_root_commit": [
+  "No change output: every sat not assigned to an output went to the miner (fees 40000 and 50000), where root-commit mkgenesis with node-sx a7cc669 charges 10000 per started KB of the unsigned transaction (10000 for both) and adds the change to output 0.",
+  "eef2faa6: the first metadata chunk is 20 non-text bytes (dd359ad6...502f) before the text; it is not a test.js wallet key (first 200 keys, both chains) or a plain hash of the text. Root-commit mkgenesis only cuts chunks from the metadata string."
+ ],
+ "caveats": [
+  "The test.js seed is public in the archived source, so anyone can derive these keys and spend these outputs; later holders say nothing about who controls them."
+ ],
+ "method": "Colored outputs are the outputs before the marker, as in every revision; holders are traced with the census tracer (vertical flow, 0-based half-open satoshi ranges) and cross-checked backwards with find_genesis. Evidence: scripts/check_vbuterin_2013_prerelease.py; tracing: scripts/trace_vbuterin_2013_prerelease.py.",
+ "sources": [
+  {
+   "service": "mempool.space",
+   "workflow_run": "36959456321",
+   "check_sha256": "5f8e3939ca6582fbfd3f3eaef528579cdfad9e28c9d6eb5a0f5920c8a3524a95",
+   "trace_sha256": "5c3456f8a40a2492ee327ba9596ae72c19d0d2958aa2859384aa9d84fa2846b6"
+  },
+  {
+   "service": "blockstream.info",
+   "workflow_run": "36959456321",
+   "check_sha256": "467425860b2079968fdfe3b3b97942cd7fba87cfa4ffbb7088db4ca1314e14e6",
+   "trace_sha256": "2f431b212acf78cde9d7b65ce67131622f4d2bd3e9990bfc8659daa70192d487"
+  }
+ ],
+ "summary": {
+  "geneses": 2,
+  "issued_sats": 40000,
+  "held_sats": 40000,
+  "burned_to_fees_sats": 0,
+  "holdings": 3,
+  "holdings_verified_by_find_genesis": 3,
+  "geneses_confirmed_by_all_services": 2
+ },
+ "geneses": [
+  {
+   "txid": "eef2faa6540b37f5075458a9c435614cb043ac545af95add18cb76c083f0e03d",
+   "block_height": 259632,
+   "block_time": 1379940859,
+   "colored_vouts": [
+    0,
+    1
+   ],
+   "marker_index": 2,
+   "fee_sats": 40000,
+   "metadata_hex": "dd359ad6c6069d5e4a10cada8aa521384b07502f416c6c20796f75722062617365206172652062656c6f6e67203220554e434c4553414d0000000000",
+   "census_checks": {
+    "vbuterin-coloredcoins-2013-09-27": [
+     "confirmed before the root commit"
+    ],
+    "vbuterin-coloredcoins-2013-10-01": [
+     "confirmed before the root commit"
+    ]
+   },
+   "issued_sats": 20000,
+   "held_sats": 20000,
+   "burned_to_fees_sats": 0,
+   "transactions_visited": 2,
+   "truncated": false,
+   "holdings": [
+    {
+     "block_height": 969218,
+     "colored_sats": 10000,
+     "find_genesis_verified": true,
+     "segments": [
+      {
+       "end": 10000,
+       "genesis_offset": 0,
+       "genesis_vout": 0,
+       "start": 0
+      }
+     ],
+     "txid": "ca2b7b61417ccf5b1206a9bb5a162c7778c75095bd1c73ca9ed654657a05d067",
+     "value_sats": 10000,
+     "vout": 0
+    },
+    {
+     "block_height": 969220,
+     "colored_sats": 10000,
+     "find_genesis_verified": true,
+     "segments": [
+      {
+       "end": 10000,
+       "genesis_offset": 0,
+       "genesis_vout": 1,
+       "start": 0
+      }
+     ],
+     "txid": "765c6354fc28132ddf0dbbc4508afa4839b0f25d1d971e906691d2b9dde2828b",
+     "value_sats": 10000,
+     "vout": 0
+    }
+   ],
+   "fee_losses": [],
+   "evidence": {
+    "funding_inputs": [
+     {
+      "prev": "fa9a3f584fa8d06276cec3a01afcdc6451d93cc521d7b65d133b3d6ed745e621:0",
+      "address": "12LMM34ht4MqxeHgNjsPjZ3wdYcfWzHnBD",
+      "value_sats": 50000,
+      "test_js_wallet": "key 0 (chain 0, uncompressed)"
+     },
+     {
+      "prev": "8544540a3d6fa62c64ea789f4815529bace0d2f1724ae8796e6f9acd925fe8c1:1",
+      "address": "12LMM34ht4MqxeHgNjsPjZ3wdYcfWzHnBD",
+      "value_sats": 50000,
+      "test_js_wallet": "key 0 (chain 0, uncompressed)"
+     }
+    ],
+    "outputs": [
+     {
+      "address": "1KSwy4aQURZLG6oCGCJg4PpeMuA9oC33iJ",
+      "value_sats": 10000,
+      "test_js_wallet": "key 1 (chain 0, uncompressed)"
+     },
+     {
+      "address": "15Xx6UmNvV11Ckewdv8rw2jE1hWLhdhtgJ",
+      "value_sats": 10000,
+      "test_js_wallet": "key 2 (chain 0, uncompressed)"
+     },
+     {
+      "address": "1111111111111111111114oLvT2",
+      "value_sats": 10000,
+      "test_js_wallet": null
+     },
+     {
+      "address": "1MAeYvbbyd8MsAsVN3eMjBpzrTQAgztEWZ",
+      "value_sats": 10000,
+      "test_js_wallet": null
+     },
+     {
+      "address": "16xvonfeDj548ADw3yFKN3kwHpZgr17bpp",
+      "value_sats": 10000,
+      "test_js_wallet": null
+     },
+     {
+      "address": "1AtMU6enHSiqpH5bDoZTnjjWW18P3CntNn",
+      "value_sats": 10000,
+      "test_js_wallet": null
+     }
+    ],
+    "unsigned_size_bytes": 296,
+    "fee_sats": 40000,
+    "root_commit_fee_rule_sats": 10000,
+    "first_metadata_chunk_hex": "dd359ad6c6069d5e4a10cada8aa521384b07502f"
+   },
+   "confirmed_by": [
+    "mempool.space",
+    "blockstream.info"
+   ]
+  },
+  {
+   "txid": "65d423d4eff6b5c737eed3b711f7c606e79d827b2a0d2936ffbd07ecfbac77d4",
+   "block_height": 259882,
+   "block_time": 1380046812,
+   "colored_vouts": [
+    0
+   ],
+   "marker_index": 1,
+   "fee_sats": 50000,
+   "metadata_hex": "416c6c20796f75722062617365206172652062656c6f6e6720746f20796f757273656c6600000000",
+   "census_checks": {
+    "vbuterin-coloredcoins-2013-09-27": [
+     "confirmed before the root commit"
+    ],
+    "vbuterin-coloredcoins-2013-10-01": [
+     "output 0 is 20000 sats, builder used 10000",
+     "confirmed before the root commit"
+    ]
+   },
+   "issued_sats": 20000,
+   "held_sats": 20000,
+   "burned_to_fees_sats": 0,
+   "transactions_visited": 1,
+   "truncated": false,
+   "holdings": [
+    {
+     "block_height": 969216,
+     "colored_sats": 20000,
+     "find_genesis_verified": true,
+     "segments": [
+      {
+       "end": 20000,
+       "genesis_offset": 0,
+       "genesis_vout": 0,
+       "start": 0
+      }
+     ],
+     "txid": "ebd9e312cc7116292c2f289b7c4be7a23bbaa3d49abadad89c2a55627036c43e",
+     "value_sats": 20000,
+     "vout": 0
+    }
+   ],
+   "fee_losses": [],
+   "evidence": {
+    "funding_inputs": [
+     {
+      "prev": "58956c050b5321ac4fc8ae35da6c09b1e99bda20021fa27d51d069c5b5ef2fa0:1",
+      "address": "12LMM34ht4MqxeHgNjsPjZ3wdYcfWzHnBD",
+      "value_sats": 100000,
+      "test_js_wallet": "key 0 (chain 0, uncompressed)"
+     }
+    ],
+    "outputs": [
+     {
+      "address": "1Co2unjWf7NnJeFobe5B5DAWW19HGzwFa2",
+      "value_sats": 20000,
+      "test_js_wallet": "key 10 (chain 0, uncompressed)"
+     },
+     {
+      "address": "1111111111111111111114oLvT2",
+      "value_sats": 10000,
+      "test_js_wallet": null
+     },
+     {
+      "address": "16xvonfeDj548ADw3yFKN3kwHpZgr17bpp",
+      "value_sats": 10000,
+      "test_js_wallet": null
+     },
+     {
+      "address": "1AtMU6enVanYj2peqhhzyTmxyvNGM4gpQU",
+      "value_sats": 10000,
+      "test_js_wallet": null
+     }
+    ],
+    "unsigned_size_bytes": 187,
+    "fee_sats": 50000,
+    "root_commit_fee_rule_sats": 10000,
+    "first_metadata_chunk_hex": "416c6c20796f7572206261736520617265206265"
+   },
+   "confirmed_by": [
+    "mempool.space",
+    "blockstream.info"
+   ]
+  }
+ ]
+}

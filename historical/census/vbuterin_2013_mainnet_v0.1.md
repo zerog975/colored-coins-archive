@@ -190,3 +190,12 @@ Generated from [`vbuterin_2013_mainnet_v0.1.json`](vbuterin_2013_mainnet_v0.1.js
 | 178 | 277279 | 2013-12-27 18:38 | [`f43f1e2742d11f4f…`](https://mempool.space/tx/f43f1e2742d11f4f8886152e8c0b63b9abc10099bfc7b238b56dfa0209ff2a05) | Oct1 | 1 | 10,000 | 10,000 | 0 | 1 | `Kn.t..f/....qy........H..-7>.$oE=...'..8` |
 | 179 | 295159 | 2014-04-10 21:12 | [`e054bd09b8bfe586…`](https://mempool.space/tx/e054bd09b8bfe5869370ebe26193f54d9f3eef87fff0f9ef5675c62fcf03c4a8) | Oct1 | 5 | 50,000 | 50,000 | 0 | 5 | `...'.....JkTj..U......Y....E>/oH=+e..fQ.` |
 | 180 | 303492 | 2014-05-31 15:38 | [`ebba9c92f36fc949…`](https://mempool.space/tx/ebba9c92f36fc94929d7d9e3fd37fced8123af5ad1e7281e294f675f14c84ed6) | Oct1 | 3 | 30,000 | 30,000 | 0 | 3 | `....n#f..\|..t..dF.^...........F.7..wk...` |
+
+## Pre-release test issuances
+
+Not counted above. From [`vbuterin_2013_mainnet_prerelease.json`](vbuterin_2013_mainnet_prerelease.json): 2 marker transactions confirmed before the root commit, funded by and paid to the wallet test.js derives from its hard-coded seed, i.e. Vitalik Buterin's own tests of the same project. They follow the same layout (colored outputs, marker, metadata) but send all change to the miner, and the first carries a 20-byte binary metadata prefix, so the root-commit code cannot rebuild them. Issued 40,000 sats; still held 40,000 sats in 3 holdings; 0 sats paid to fees.
+
+| # | Block | Date (UTC) | Genesis transaction | Rules | Colored outputs | Issued | Held | Burned | Holders | Metadata |
+|---:|---:|---|---|---|---:|---:|---:|---:|---:|---|
+| P1 | 259632 | 2013-09-23 12:54 | [`eef2faa6540b37f5…`](https://mempool.space/tx/eef2faa6540b37f5075458a9c435614cb043ac545af95add18cb76c083f0e03d) | pre-release | 2 | 20,000 | 20,000 | 0 | 2 | `.5.....^J.....!8K.P/All your base are belong 2 UNCLESAM` |
+| P2 | 259882 | 2013-09-24 18:20 | [`65d423d4eff6b5c7…`](https://mempool.space/tx/65d423d4eff6b5c737eed3b711f7c606e79d827b2a0d2936ffbd07ecfbac77d4) | pre-release | 1 | 20,000 | 20,000 | 0 | 1 | `All your base are belong to yourself` |
