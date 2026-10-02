@@ -308,3 +308,14 @@ class FrozenCensusTests(unittest.TestCase):
             if g["matching_rulesets"] == [vb.RULESET_PROTOCOL_FIX]:
                 with self.subTest(genesis=g["txid"]):
                     self.assertEqual(g["issued_sats"], 10000 * len(g["colored_vouts"]))
+
+    def test_rendered_views_are_up_to_date(self):
+        spec = importlib.util.spec_from_file_location(
+            "render_census", SCRIPT.parent / "render_vbuterin_2013_census.py")
+        render = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(render)
+        census = SCRIPT.parents[1] / "historical" / "census"
+        stem = "vbuterin_2013_mainnet_v0.1"
+        self.assertEqual((census / f"{stem}.csv").read_text(encoding="utf-8"), render.render_csv(self.data))
+        self.assertEqual((census / f"{stem}.md").read_text(encoding="utf-8"),
+                         render.render_md(self.data, f"{stem}.json"))
