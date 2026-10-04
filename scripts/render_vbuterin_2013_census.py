@@ -152,6 +152,17 @@ def render_md(data: dict, json_name: str, prerelease: dict | None = None) -> str
             "marker, metadata) but send all change to the miner, and the first carries a 20-byte binary metadata "
             f"prefix, so the root-commit code cannot rebuild them. Issued {s['issued_sats']:,} sats; still held "
             f"{s['held_sats']:,} sats in {s['holdings']} holdings; {s['burned_to_fees_sats']:,} sats paid to fees.",
+        ] + ([
+            "",
+            "Replaying node-sx coin selection as committed at the time against the test.js key-0 wallet: "
+            + "; ".join(
+                f"P{i} " + ("reproduced" if g["coin_selection"]["reproduced"] else "not reproduced")
+                + " (inputs picked only for requests of "
+                + ", ".join(f"{r['from_sats']:,}–{r['to_sats']:,}" for r in g["coin_selection"]["requests_reproducing_inputs"])
+                + " sats)"
+                for i, g in enumerate(prerelease["geneses"], 1) if "coin_selection" in g)
+            + ". See the record for details.",
+        ] if any("coin_selection" in g for g in prerelease["geneses"]) else []) + [
             "",
         ] + HEADER + [_md_row(r) for r in all_rows if str(r[0]).startswith("P")]
         lines += [

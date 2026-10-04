@@ -605,6 +605,8 @@ Every output holding colored sats at the census, by address (403 holdings; looke
 
 Not counted above. From [`vbuterin_2013_mainnet_prerelease.json`](vbuterin_2013_mainnet_prerelease.json): 2 marker transactions confirmed before the root commit, funded by and paid to the wallet test.js derives from its hard-coded seed, i.e. Vitalik Buterin's own tests of the same project. They follow the same layout (colored outputs, marker, metadata) but send all change to the miner, and the first carries a 20-byte binary metadata prefix, so the root-commit code cannot rebuild them. Issued 40,000 sats; still held 40,000 sats in 3 holdings; 0 sats paid to fees.
 
+Replaying node-sx coin selection as committed at the time against the test.js key-0 wallet: P1 reproduced (inputs picked only for requests of 50,001–100,000 sats); P2 not reproduced (inputs picked only for requests of 80,001–100,000 sats). See the record for details.
+
 | # | Block | Date (UTC) | Genesis transaction | Rules | Colored outputs | Issued | Held | Burned | Holders | Metadata |
 |---:|---:|---|---|---|---:|---:|---:|---:|---:|---|
 | P1 | 259632 | 2013-09-23 12:54 | [`eef2faa6540b37f5…`](https://mempool.space/tx/eef2faa6540b37f5075458a9c435614cb043ac545af95add18cb76c083f0e03d) | pre-release | 2 | 20,000 | 20,000 | 0 | 2 | `.5.....^J.....!8K.P/All your base are belong 2 UNCLESAM` |

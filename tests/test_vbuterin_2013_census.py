@@ -327,6 +327,25 @@ class PrereleaseRecordTests(unittest.TestCase):
                                  - sum(o["value_sats"] for o in ev["outputs"]))
                 self.assertNotEqual(ev["fee_sats"], ev["root_commit_fee_rule_sats"])
 
+    def test_coin_selection_replay(self):
+        by_txid = {g["txid"][:8]: g["coin_selection"] for g in self.pre["geneses"]}
+        self.assertTrue(by_txid["eef2faa6"]["reproduced"])
+        self.assertEqual(by_txid["eef2faa6"]["requests_reproducing_inputs"], [{"from_sats": 50001, "to_sats": 100000}])
+        self.assertFalse(by_txid["65d423d4"]["reproduced"])
+        self.assertEqual(by_txid["65d423d4"]["requests_reproducing_inputs"], [{"from_sats": 80001, "to_sats": 100000}])
+
+    def test_v8_sort_replay(self):
+        spec = importlib.util.spec_from_file_location(
+            "selection", SCRIPT.parent / "check_vbuterin_2013_prerelease_selection.py")
+        sel = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(sel)
+        small = [{"outpoint": str(i), "value": v} for i, v in enumerate([5, 3, 9, 1])]
+        self.assertEqual([o["value"] for o in sel.v8_sort(small)], [1, 3, 5, 9])  # insertion sort is correct
+        coins = [{"outpoint": "a", "value": 100000}, {"outpoint": "b", "value": 80000}]
+        self.assertEqual(sel.get_enough_utxo_from_history(coins, 60000), [coins[1]])
+        self.assertEqual(sel.get_enough_utxo_from_history(coins, 90000), [coins[0]])
+        self.assertEqual(sel.matching_amounts(coins, {"a"}), [[80001, 100000]])
+
     def test_test_js_wallet_derivation(self):
         spec = importlib.util.spec_from_file_location(
             "check_prerelease", SCRIPT.parent / "check_vbuterin_2013_prerelease.py")
