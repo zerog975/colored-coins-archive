@@ -2,7 +2,8 @@ name: vbuterin 2013 pre-root transaction check
 
 # Read-only: compares the two marker transactions confirmed before the root
 # commit with the root-commit fee rule and the test.js wallet, and traces
-# their holders. Results are printed to the job log.
+# their holders, and replays node-sx coin selection against the test.js
+# wallet. Results are printed to the job log.
 
 on:
   push:
@@ -12,6 +13,7 @@ on:
       - ".github/workflows/vbuterin-2013-prerelease-check.yml"
       - "scripts/check_vbuterin_2013_prerelease.py"
       - "scripts/trace_vbuterin_2013_prerelease.py"
+      - "scripts/check_vbuterin_2013_prerelease_selection.py"
   workflow_dispatch:
 
 permissions:
@@ -33,3 +35,5 @@ jobs:
         run: python scripts/check_vbuterin_2013_prerelease.py --base-url "${{ matrix.base_url }}" --request-delay 2
       - name: Trace holders
         run: python scripts/trace_vbuterin_2013_prerelease.py --base-url "${{ matrix.base_url }}" --request-delay 2
+      - name: Replay coin selection
+        run: python scripts/check_vbuterin_2013_prerelease_selection.py --base-url "${{ matrix.base_url }}" --request-delay 2
