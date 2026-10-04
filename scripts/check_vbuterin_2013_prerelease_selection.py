@@ -11,7 +11,9 @@ replay reproduces V8 3.14's Array.prototype.sort (node 0.10): insertion sort
 up to 10 elements, quicksort above, with true -> 1 and false -> 0.
 
 For each transaction the unspent outputs of test.js key 0 are rebuilt from the
-address history as confirmed before the transaction's block. The script
+address history in chain order (height, then position in the block), i.e. as a
+wallet that also saw its own unconfirmed transactions would have seen them
+just before broadcasting it. The full key-0 history is printed too. The script
 reports every amount for which the replay picks exactly the inputs the
 transaction spent, under chronological and reverse-chronological history
 order, and checks the amounts the candidate builders would request.
@@ -168,23 +170,33 @@ def main() -> int:
     else:
         raise SystemExit("address history longer than --max-pages")
 
-    created, spent_at = [], {}
-    for tx in history:
-        h = tx["status"]["block_height"]
-        for n, o in enumerate(tx["vout"]):
-            if o.get("scriptpubkey_address") == KEY0:
-                created.append({"outpoint": f"{tx['txid']}:{n}", "value": o["value"], "height": h})
-        for i in tx["vin"]:
-            if (i.get("prevout") or {}).get("scriptpubkey_address") == KEY0:
-                spent_at[f"{i['txid']}:{i['vout']}"] = h
+    pos = {tx["txid"]: src.get_transaction(tx["txid"]).historical_sort_key()[:2] for tx in history}
+    created, spent_at, listing = [], {}, []
+    for tx in sorted(history, key=lambda t: pos[t["txid"]]):
+        p = pos[tx["txid"]]
+        ins = [(f"{i['txid']}:{i['vout']}", i["prevout"]["value"]) for i in tx["vin"]
+               if (i.get("prevout") or {}).get("scriptpubkey_address") == KEY0]
+        outs = [(f"{tx['txid']}:{n}", o["value"]) for n, o in enumerate(tx["vout"])
+                if o.get("scriptpubkey_address") == KEY0]
+        for op, v in outs:
+            created.append({"outpoint": op, "value": v, "height": p[0], "pos": p})
+        for op, _ in ins:
+            spent_at[op] = p
+        listing.append({"txid": tx["txid"], "block_height": p[0], "index_in_block": p[1],
+                        "block_time": tx["status"].get("block_time"),
+                        "spends_from_key0": ins, "pays_key0": outs,
+                        "other_outputs": [(o.get("scriptpubkey_address"), o["value"]) for o in tx["vout"]
+                                          if o.get("scriptpubkey_address") != KEY0]})
 
-    report = {"service": args.base_url, "address": KEY0, "history_transactions": len(history), "transactions": []}
+    report = {"service": args.base_url, "address": KEY0, "history_transactions": len(history),
+              "history": listing, "transactions": []}
     for txid in PRE_ROOT:
         tx = src._read(f"/api/tx/{txid}")
         height = tx["status"]["block_height"]
+        here = pos[txid]
         actual = {f"{i['txid']}:{i['vout']}" for i in tx["vin"]}
-        before = [o for o in created if o["height"] < height
-                  and not (o["outpoint"] in spent_at and spent_at[o["outpoint"]] < height)]
+        before = [o for o in created if o["pos"] < here
+                  and not (o["outpoint"] in spent_at and spent_at[o["outpoint"]] < here)]
         same_block = [o["outpoint"] for o in created if o["height"] == height]
         outputs = [o["value"] for o in tx["vout"]]
         n_out = len(outputs)
@@ -195,11 +207,11 @@ def main() -> int:
         }
         entry = {"txid": txid, "block_height": height, "actual_inputs": sorted(actual),
                  "outputs_total": sum(outputs), "output_count": n_out,
-                 "unspent_before_block": [{k: o[k] for k in ("outpoint", "value", "height")} for o in before],
+                 "unspent_before_block": [{k: o[k] for k in ("outpoint", "value", "height", "pos")} for o in before],
                  "created_in_same_block": same_block, "orders": {}}
-        for label, utxo in (("chronological", sorted(before, key=lambda o: (o["height"], o["outpoint"]))),
+        for label, utxo in (("chronological", sorted(before, key=lambda o: o["pos"])),
                             ("reverse-chronological",
-                             sorted(before, key=lambda o: (o["height"], o["outpoint"]), reverse=True))):
+                             sorted(before, key=lambda o: o["pos"], reverse=True))):
             entry["orders"][label] = {
                 "matching_amount_intervals": matching_amounts(utxo, actual),
                 "candidate_amounts": {
